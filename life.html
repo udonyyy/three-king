@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>生活记录 - Three KING</title>
+  <link rel="icon" href="atm.jpg" type="image/png/jpg">
+  
+  <!-- ✅ 引入 Font Awesome 图标库 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    body {
+      font-family: "Arial", sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 30px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    nav {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    nav a {
+      text-decoration: none;
+      background-color: #007BFF;
+      color: white;
+      padding: 10px 18px;
+      margin: 0 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      display: inline-block;
+      transition: background-color 0.3s;
+    }
+
+    nav a:hover {
+      background-color: #0056b3;
+    }
+
+    .input-area {
+      max-width: 600px;
+      margin: 0 auto 40px auto;
+      text-align: center;
+    }
+
+    textarea {
+      width: 100%;
+      font-size: 16px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+
+    input[type="file"] {
+      margin-top: 10px;
+    }
+
+    button {
+      background-color: #28a745;
+      color: white;
+      font-size: 16px;
+      padding: 10px 20px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    .post {
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      padding: 20px;
+      margin: 30px auto;
+      max-width: 600px;
+      word-wrap: break-word;
+      position: relative;
+    }
+
+    .post img {
+      width: 100%;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    .time {
+      font-size: 12px;
+      color: #888;
+      text-align: right;
+      margin-top: 10px;
+    }
+
+    /* ✅ 删除按钮样式 */
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 18px;
+      cursor: pointer;
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      transition: color 0.3s;
+    }
+
+    .delete-btn:hover {
+      color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Three KING 的生活记录 ✨</h1>
+
+  <nav>
+    <a href="index.html">返回主页</a>
+    <a href="about.html">关于我们</a>
+    <a href="contact.html">联系方式</a>
+  </nav>
+
+  <!-- 输入区 -->
+  <div class="input-area">
+    <h2>📝 写下今天的心情/趣事</h2>
+    <textarea id="diaryInput" rows="4" placeholder="今天发生了什么？"></textarea><br>
+    <input type="file" id="imageInput" accept="image/*"><br>
+    <button onclick="addDiary()">发表</button>
+  </div>
+
+  <div id="diaryList"></div>
+
+  <!-- JavaScript 脚本 -->
+  <script>
+    // 页面加载时加载历史记录
+    window.onload = function () {
+      const stored = localStorage.getItem("diaryData");
+      if (stored) {
+        document.getElementById("diaryList").innerHTML = stored;
+      }
+    };
+
+    function addDiary() {
+      const text = document.getElementById("diaryInput").value.trim();
+      const imageFile = document.getElementById("imageInput").files[0];
+
+      if (!text && !imageFile) {
+        alert("请写点内容或上传图片！");
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = function () {
+        const imageURL = imageFile ? `<img src="${reader.result}">` : "";
+        const now = new Date().toLocaleString();
+        const entry = `
+          <div class="post">
+            <button class="delete-btn" title="删除"><i class="fas fa-trash-alt"></i></button>
+            <p>${text}</p>
+            ${imageURL}
+            <div class="time">${now}</div>
+          </div>
+        `;
+
+        const list = document.getElementById("diaryList");
+        list.insertAdjacentHTML("afterbegin", entry);
+
+        saveData();
+        document.getElementById("diaryInput").value = "";
+        document.getElementById("imageInput").value = "";
+      };
+
+      if (imageFile) {
+        reader.readAsDataURL(imageFile);
+      } else {
+        reader.onload();
+      }
+    }
+
+    // ✅ 删除功能（使用事件委托）
+    document.addEventListener("click", function (e) {
+      if (e.target.closest(".delete-btn")) {
+        const post = e.target.closest(".post");
+        if (post) {
+          post.remove();
+          saveData();
+        }
+      }
+    });
+
+    // 保存到本地
+    function saveData() {
+      const content = document.getElementById("diaryList").innerHTML;
+      localStorage.setItem("diaryData", content);
+    }
+  </script>
+
+</body>
+</html>
