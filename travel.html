@@ -1,0 +1,2919 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>旅行手账 - Three KING</title>
+    <link rel="icon" href="atm.jpg" type="image/png/jpg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css"
+      rel="stylesheet"
+    />
+    <script src="attractions.js"></script>
+    <!-- 引入景点数据文件 -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#3B82F6", // 清新蓝为主色调
+              secondary: "#10B981", // 绿色为辅助色
+              accent: "#F59E0B", // 橙色为强调色
+              neutral: "#F3F4F6", // 浅灰背景
+            },
+            fontFamily: {
+              sans: ["Inter", "system-ui", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style type="text/tailwindcss">
+      @layer utilities {
+        .content-auto {
+          content-visibility: auto;
+        }
+        .card-hover {
+          @apply transition-all duration-300 hover:shadow-md hover:-translate-y-1;
+        }
+        .btn-effect {
+          @apply transform transition-all duration-200 active:scale-95;
+        }
+        .input-focus {
+          @apply focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none;
+        }
+        .route-arrow {
+          @apply absolute border-t-2 border-primary transform -translate-x-1/2 -translate-y-1/2;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-neutral font-sans text-gray-800 min-h-screen">
+    <!-- 顶部导航 -->
+    <header class="sticky top-0 z-50 bg-white shadow-sm">
+      <div
+        class="container mx-auto px-4 py-3 flex items-center"
+      >
+        <a href="index.html" class="flex items-center gap-2">
+          <i class="fa fa-paper-plane text-primary text-2xl"></i>
+          <h1 class="text-xl font-bold text-primary">Three King</h1>
+        </a>
+        <nav class="flex gap-1 sm:gap-3 mx-auto justify-center">
+          <button id="homeBtn" class="nav-btn active px-3 py-2 rounded-md">
+            <i class="fa fa-home mr-1 hidden sm:inline"></i>首页
+          </button>
+          <button id="tripBtn" class="nav-btn px-3 py-2 rounded-md">
+            <i class="fa fa-suitcase mr-1 hidden sm:inline"></i>行程
+          </button>
+          <button id="diaryBtn" class="nav-btn px-3 py-2 rounded-md">
+            <i class="fa fa-book mr-1 hidden sm:inline"></i>手账
+          </button>
+          <button id="randomBtn" class="nav-btn px-3 py-2 rounded-md">
+            <i class="fa fa-random mr-1 hidden sm:inline"></i>盲盒
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6">
+      <!-- 首页区域 -->
+      <section id="homeSection">
+        <div class="text-center mb-10 mt-6">
+          <h2
+            class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold mb-3 text-gray-800"
+          >
+            记录你的旅行故事
+          </h2>
+          <p class="text-gray-600 max-w-2xl mx-auto">
+            简单好用的旅行工具，帮你规划行程、记录美好瞬间
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          <!-- 功能卡片1 -->
+          <div class="bg-white rounded-xl p-5 shadow-sm card-hover">
+            <div
+              class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4"
+            >
+              <i class="fa fa-map-o text-xl"></i>
+            </div>
+            <h3 class="font-bold text-lg mb-2">行程规划</h3>
+            <p class="text-gray-600 text-sm mb-4">拖拽安排每日行程，灵活调整</p>
+            <button
+              onclick="showSection('tripSection')"
+              class="text-primary hover:text-primary/80 text-sm flex items-center btn-effect"
+            >
+              开始规划 <i class="fa fa-arrow-right ml-1"></i>
+            </button>
+          </div>
+
+          <!-- 功能卡片2 -->
+          <div class="bg-white rounded-xl p-5 shadow-sm card-hover">
+            <div
+              class="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center text-secondary mb-4"
+            >
+              <i class="fa fa-pencil text-xl"></i>
+            </div>
+            <h3 class="font-bold text-lg mb-2">旅行手账</h3>
+            <p class="text-gray-600 text-sm mb-4">写日记、贴照片，珍藏回忆</p>
+            <button
+              onclick="showSection('diarySection')"
+              class="text-secondary hover:text-secondary/80 text-sm flex items-center btn-effect"
+            >
+              写点什么 <i class="fa fa-arrow-right ml-1"></i>
+            </button>
+          </div>
+
+          <!-- 功能卡片3 -->
+          <div class="bg-white rounded-xl p-5 shadow-sm card-hover">
+            <div
+              class="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center text-accent mb-4"
+            >
+              <i class="fa fa-gift text-xl"></i>
+            </div>
+            <h3 class="font-bold text-lg mb-2">旅行盲盒</h3>
+            <p class="text-gray-600 text-sm mb-4">
+              随机获取旅行灵感，发现新去处
+            </p>
+            <button
+              onclick="showSection('randomSection')"
+              class="text-accent hover:text-accent/80 text-sm flex items-center btn-effect"
+            >
+              开盲盒 <i class="fa fa-arrow-right ml-1"></i>
+            </button>
+          </div>
+
+          <!-- 功能卡片4 -->
+          <div class="bg-white rounded-xl p-5 shadow-sm card-hover">
+            <div
+              class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-500 mb-4"
+            >
+              <i class="fa fa-check-square-o text-xl"></i>
+            </div>
+            <h3 class="font-bold text-lg mb-2">出行清单</h3>
+            <p class="text-gray-600 text-sm mb-4">整理行李不遗漏，轻松出行</p>
+            <button
+              onclick="showSection('checklistSection')"
+              class="text-purple-500 hover:text-purple-500/80 text-sm flex items-center btn-effect"
+            >
+              列清单 <i class="fa fa-arrow-right ml-1"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 风景图 -->
+        <div class="rounded-xl overflow-hidden shadow-md mb-8">
+          <img
+            src="https://picsum.photos/id/1036/1200/400"
+            alt="旅行风景"
+            class="w-full h-48 sm:h-64 object-cover"
+          />
+        </div>
+      </section>
+
+      <!-- 行程规划区域 -->
+      <section id="tripSection" class="hidden">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold">行程规划</h2>
+          <button
+            onclick="showSection('homeSection')"
+            class="text-gray-500 hover:text-gray-700 p-2 btn-effect"
+          >
+            <i class="fa fa-arrow-left"></i> 返回
+          </button>
+        </div>
+
+        <!-- 行程管理 -->
+        <div class="bg-white rounded-xl p-5 shadow-sm mb-6">
+          <div class="flex flex-col sm:flex-row gap-3 mb-6">
+            <input
+              type="text"
+              id="newTripName"
+              placeholder="新行程名称（如：周末杭州游）"
+              class="flex-1 px-4 py-2 border border-gray-200 rounded-lg input-focus"
+            />
+            <div class="flex gap-3 w-full sm:w-auto">
+              <input
+                type="date"
+                id="tripStartDate"
+                class="flex-1 px-4 py-2 border border-gray-200 rounded-lg input-focus"
+              />
+              <input
+                type="date"
+                id="tripEndDate"
+                class="flex-1 px-4 py-2 border border-gray-200 rounded-lg input-focus"
+              />
+            </div>
+            <button
+              id="addTripBtn"
+              class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors btn-effect"
+            >
+              <i class="fa fa-plus mr-1"></i> 创建行程
+            </button>
+          </div>
+
+          <!-- 行程切换 -->
+          <div class="mb-6">
+            <h3 class="font-bold mb-3">我的行程</h3>
+            <div
+              id="tripTabs"
+              class="flex flex-wrap gap-2 max-h-20 overflow-y-auto pb-2"
+            >
+              <!-- 行程标签会动态添加 -->
+            </div>
+          </div>
+
+          <!-- 当前行程信息 -->
+          <div
+            id="currentTripInfo"
+            class="hidden mb-6 p-4 bg-gray-50 rounded-lg"
+          >
+            <div class="flex flex-wrap justify-between gap-4">
+              <div>
+                <h4 class="font-bold text-lg" id="currentTripTitle">
+                  行程名称
+                </h4>
+                <p class="text-gray-600">
+                  <i class="fa fa-calendar mr-1"></i>
+                  <span id="currentTripDateRange">日期范围</span> ·
+                  <span id="currentTripDays">天数</span>
+                </p>
+              </div>
+              <div class="flex gap-2">
+                <button
+                  id="editTripBtn"
+                  class="text-gray-600 hover:text-primary p-2 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors btn-effect"
+                >
+                  <i class="fa fa-pencil mr-1"></i> 编辑行程
+                </button>
+                <button
+                  id="deleteTripBtn"
+                  class="text-gray-600 hover:text-red-500 p-2 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors btn-effect"
+                >
+                  <i class="fa fa-trash mr-1"></i> 删除行程
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 行程内容 -->
+        <div id="tripContent" class="hidden">
+          <!-- 每日切换 -->
+          <div class="bg-white rounded-xl p-5 shadow-sm mb-6">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-bold">日程安排</h3>
+              <div class="flex gap-2">
+                <select
+                  id="daySelector"
+                  class="border border-gray-200 rounded-lg px-3 py-1 input-focus"
+                >
+                  <!-- 日期选项会动态添加 -->
+                </select>
+                <button
+                  id="addDayBtn"
+                  class="text-primary hover:text-primary/80 p-1 border border-primary/30 rounded-lg hover:bg-primary/5 transition-colors btn-effect"
+                >
+                  <i class="fa fa-plus mr-1"></i> 添加天数
+                </button>
+              </div>
+            </div>
+
+            <!-- 地点添加 -->
+            <div
+              class="flex flex-col sm:flex-row gap-3 mb-5 p-4 bg-gray-50 rounded-lg"
+            >
+              <div class="flex-1">
+                <input
+                  type="text"
+                  id="locationName"
+                  placeholder="地点名称"
+                  class="w-full px-4 py-2 border border-gray-200 rounded-lg input-focus mb-2"
+                />
+                <div class="flex gap-2">
+                  <input
+                    type="text"
+                    id="locationSearch"
+                    placeholder="搜索景点..."
+                    class="flex-1 px-4 py-2 border border-gray-200 rounded-lg input-focus"
+                  />
+                  <button
+                    id="searchLocationBtn"
+                    class="bg-primary/10 text-primary px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors btn-effect"
+                  >
+                    <i class="fa fa-search"></i>
+                  </button>
+                </div>
+                <div
+                  id="locationSuggestions"
+                  class="hidden mt-2 bg-white border border-gray-200 rounded-lg shadow-md max-h-40 overflow-y-auto absolute z-10"
+                ></div>
+              </div>
+              <input
+                type="text"
+                id="locationNote"
+                placeholder="备注（可选）"
+                class="flex-1 px-4 py-2 border border-gray-200 rounded-lg input-focus"
+              />
+              <div class="flex gap-2 w-full sm:w-auto">
+                <label
+                  class="border border-gray-200 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors flex items-center cursor-pointer btn-effect"
+                >
+                  <i class="fa fa-picture-o text-gray-500 mr-1"></i>
+                  <span>添加图片</span>
+                  <input
+                    type="file"
+                    id="locationImage"
+                    accept="image/*"
+                    class="hidden"
+                    onchange="handleLocationImageUpload(event)"
+                  />
+                </label>
+                <button
+                  id="addLocationBtn"
+                  class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors btn-effect"
+                >
+                  <i class="fa fa-map-marker mr-1"></i> 添加地点
+                </button>
+              </div>
+            </div>
+
+            <!-- 地点列表和路线 -->
+            <div
+              class="relative min-h-60 border border-gray-200 rounded-lg p-4 mb-4"
+            >
+              <div id="locationsContainer" class="relative z-10">
+                <!-- 地点会动态添加 -->
+                <div
+                  class="text-center text-gray-400 py-10"
+                  id="noLocationsMessage"
+                >
+                  <i class="fa fa-map-o text-2xl mb-2"></i>
+                  <p>添加地点来规划你的行程</p>
+                </div>
+              </div>
+              <div
+                id="routesContainer"
+                class="absolute top-0 left-0 w-full h-full pointer-events-none"
+              >
+                <!-- 路线箭头会动态添加 -->
+              </div>
+            </div>
+
+            <!-- 当天活动安排 -->
+            <div>
+              <div class="flex justify-between items-center mb-3">
+                <h4 class="font-bold">当天活动</h4>
+                <button
+                  id="addActivityBtn"
+                  class="text-sm text-primary hover:text-primary/80 flex items-center btn-effect"
+                >
+                  <i class="fa fa-plus mr-1"></i> 添加活动
+                </button>
+              </div>
+              <div
+                id="activitiesContainer"
+                class="space-y-2 max-h-40 overflow-y-auto"
+              >
+                <!-- 活动会动态添加 -->
+                <div
+                  class="text-center text-gray-400 py-6"
+                  id="noActivitiesMessage"
+                >
+                  <p>添加今天的活动安排</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 行程图片和文件 -->
+          <div class="bg-white rounded-xl p-5 shadow-sm">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="font-bold">行程资料</h3>
+              <label
+                class="border border-gray-200 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors flex items-center cursor-pointer btn-effect"
+              >
+                <i class="fa fa-upload text-gray-500 mr-1"></i>
+                <span>上传文件</span>
+                <input
+                  type="file"
+                  id="tripFileUpload"
+                  class="hidden"
+                  onchange="handleTripFileUpload(event)"
+                />
+              </label>
+            </div>
+            <div
+              id="tripFilesContainer"
+              class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"
+            >
+              <!-- 文件会动态添加 -->
+              <div
+                class="text-center text-gray-400 py-6 col-span-full"
+                id="noFilesMessage"
+              >
+                <i class="fa fa-file-o text-2xl mb-2"></i>
+                <p>上传图片或文件作为参考</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          id="noTripSelected"
+          class="bg-white rounded-xl p-8 shadow-sm text-center"
+        >
+          <i class="fa fa-suitcase text-4xl text-gray-300 mb-4"></i>
+          <h3 class="text-xl font-bold mb-2">还没有行程</h3>
+          <p class="text-gray-600 mb-4">创建你的第一个行程，开始规划旅行</p>
+          <button
+            onclick="document.getElementById('newTripName').focus()"
+            class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors btn-effect"
+          >
+            立即创建
+          </button>
+        </div>
+      </section>
+
+      <!-- 编辑行程模态框 -->
+      <div
+        id="editTripModal"
+        class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center"
+      >
+        <div class="bg-white rounded-xl p-5 w-full max-w-md">
+          <h3 class="font-bold text-xl mb-4">编辑行程</h3>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1">行程名称</label>
+            <input
+              type="text"
+              id="editTripName"
+              class="w-full px-4 py-2 border border-gray-200 rounded-lg input-focus"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-gray-700 mb-1">开始日期</label>
+              <input
+                type="date"
+                id="editTripStartDate"
+                class="w-full px-4 py-2 border border-gray-200 rounded-lg input-focus"
+              />
+            </div>
+            <div>
+              <label class="block text-gray-700 mb-1">结束日期</label>
+              <input
+                type="date"
+                id="editTripEndDate"
+                class="w-full px-4 py-2 border border-gray-200 rounded-lg input-focus"
+              />
+            </div>
+          </div>
+          <div class="flex gap-2 justify-end">
+            <button
+              id="cancelEditTripBtn"
+              class="border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors btn-effect"
+            >
+              取消
+            </button>
+            <button
+              id="saveEditTripBtn"
+              class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors btn-effect"
+            >
+              保存
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 旅行手账区域 -->
+      <section id="diarySection" class="hidden">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold">旅行手账</h2>
+          <button
+            onclick="showSection('homeSection')"
+            class="text-gray-500 hover:text-gray-700 p-2 btn-effect"
+          >
+            <i class="fa fa-arrow-left"></i> 返回
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl p-5 shadow-sm mb-6">
+              <input
+                type="text"
+                id="diaryTitle"
+                placeholder="手账标题"
+                class="w-full px-4 py-2 border-b border-gray-200 text-xl font-bold mb-4 input-focus"
+              />
+
+              <textarea
+                id="diaryContent"
+                rows="8"
+                placeholder="写下今天的旅行故事吧..."
+                class="w-full px-4 py-2 border border-gray-200 rounded-lg input-focus mb-4"
+              ></textarea>
+
+              <div class="flex flex-wrap gap-3 mb-4">
+                <label
+                  class="border border-gray-200 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors flex items-center cursor-pointer btn-effect"
+                >
+                  <i class="fa fa-picture-o text-gray-500 mr-1"></i>
+                  <span>添加照片</span>
+                  <input
+                    type="file"
+                    id="diaryImageUpload"
+                    accept="image/*"
+                    multiple
+                    class="hidden"
+                    onchange="handleDiaryImageUpload(event)"
+                  />
+                </label>
+                <input
+                  type="date"
+                  id="diaryDate"
+                  class="border border-gray-200 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors"
+                />
+              </div>
+
+              <div id="diaryPhotos" class="flex flex-wrap gap-3 mb-4 min-h-20">
+                <div class="text-gray-400 text-sm flex items-center">
+                  <i class="fa fa-camera mr-1"></i> 照片将显示在这里
+                </div>
+              </div>
+
+              <div class="flex gap-2">
+                <button
+                  id="saveDiaryBtn"
+                  class="bg-secondary text-white px-6 py-2 rounded-lg hover:bg-secondary/90 transition-colors btn-effect"
+                >
+                  <i class="fa fa-save mr-1"></i> 保存手账
+                </button>
+                <button
+                  id="cancelDiaryBtn"
+                  class="border border-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors btn-effect hidden"
+                >
+                  <i class="fa fa-times mr-1"></i> 取消
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="bg-white rounded-xl p-5 shadow-sm sticky top-20">
+              <h3 class="font-bold mb-4">我的手账</h3>
+              <div
+                id="diaryList"
+                class="space-y-3 max-h-[500px] overflow-y-auto"
+              >
+                <div class="text-center text-gray-400 py-6">
+                  <i class="fa fa-book text-2xl mb-2"></i>
+                  <p>还没有手账，写一篇吧</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 旅行盲盒区域 -->
+      <section id="randomSection" class="hidden">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold">旅行盲盒</h2>
+          <button
+            onclick="showSection('homeSection')"
+            class="text-gray-500 hover:text-gray-700 p-2 btn-effect"
+          >
+            <i class="fa fa-arrow-left"></i> 返回
+          </button>
+        </div>
+
+        <div class="bg-white rounded-xl p-5 shadow-sm mb-6 text-center">
+          <div class="mb-6">
+            <h3 class="font-bold mb-3">选择范围</h3>
+            <div class="flex flex-wrap justify-center gap-3">
+              <select
+                id="provinceSelector"
+                class="border border-gray-200 rounded-lg px-4 py-2 input-focus"
+              >
+                <option value="">全国</option>
+                <!-- 省份会动态添加 -->
+              </select>
+              <select
+                id="citySelector"
+                class="border border-gray-200 rounded-lg px-4 py-2 input-focus"
+                disabled
+              >
+                <option value="">所有城市</option>
+                <!-- 城市会动态添加 -->
+              </select>
+            </div>
+          </div>
+
+          <div
+            id="randomResult"
+            class="mb-6 min-h-40 flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-lg"
+          >
+            <i class="fa fa-map-signs text-5xl text-gray-300 mb-4"></i>
+            <p class="text-gray-400">点击按钮开启盲盒</p>
+          </div>
+
+          <button
+            id="randomBtnAction"
+            class="bg-accent text-white px-8 py-3 rounded-full hover:bg-accent/90 transition-colors text-lg font-medium btn-effect"
+          >
+            <i class="fa fa-random mr-2"></i> 开启盲盒
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white rounded-xl p-5 shadow-sm">
+            <h3 class="font-bold mb-3 flex items-center">
+              <i class="fa fa-lightbulb-o text-yellow-500 mr-2"></i> 旅行小贴士
+            </h3>
+            <ul class="space-y-2 text-gray-600">
+              <li class="flex items-start">
+                <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                <span>学生证可享受很多景点优惠</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                <span>提前查好路线，节省时间</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                <span>轻装出行，避免行李负担</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="bg-white rounded-xl p-5 shadow-sm">
+            <h3 class="font-bold mb-3 flex items-center">
+              <i class="fa fa-star text-yellow-500 mr-2"></i> 热门目的地
+            </h3>
+            <ul class="space-y-2 text-gray-600">
+              <li class="flex items-start">
+                <i class="fa fa-map-marker text-primary mt-1 mr-2"></i>
+                <span>北京 - 历史文化名城</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-map-marker text-primary mt-1 mr-2"></i>
+                <span>上海 - 现代都市风光</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-map-marker text-primary mt-1 mr-2"></i>
+                <span>成都 - 美食与悠闲生活</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 出行清单区域 -->
+      <section id="checklistSection" class="hidden">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold">出行清单</h2>
+          <button
+            onclick="showSection('homeSection')"
+            class="text-gray-500 hover:text-gray-700 p-2 btn-effect"
+          >
+            <i class="fa fa-arrow-left"></i> 返回
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white rounded-xl p-5 shadow-sm">
+            <div class="flex gap-2 mb-4">
+              <input
+                type="text"
+                id="checklistItem"
+                placeholder="添加要带的物品..."
+                class="flex-1 px-4 py-2 border border-gray-200 rounded-lg input-focus"
+              />
+              <button
+                id="addChecklistBtn"
+                class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-500/90 transition-colors btn-effect"
+              >
+                <i class="fa fa-plus"></i>
+              </button>
+            </div>
+
+            <h3 class="font-bold mb-3">我的行李清单</h3>
+            <div
+              id="checklistContainer"
+              class="space-y-2 max-h-80 overflow-y-auto"
+            >
+              <!-- 示例清单项 -->
+              <div
+                class="flex items-center gap-2 p-2 border border-gray-100 rounded-lg"
+              >
+                <input
+                  type="checkbox"
+                  class="check-item h-4 w-4 accent-purple-500"
+                />
+                <span>身份证/学生证</span>
+                <button
+                  class="ml-auto text-gray-400 hover:text-red-500 delete-item btn-effect"
+                >
+                  <i class="fa fa-times"></i>
+                </button>
+              </div>
+              <div
+                class="flex items-center gap-2 p-2 border border-gray-100 rounded-lg"
+              >
+                <input
+                  type="checkbox"
+                  class="check-item h-4 w-4 accent-purple-500"
+                />
+                <span>手机充电器</span>
+                <button
+                  class="ml-auto text-gray-400 hover:text-red-500 delete-item btn-effect"
+                >
+                  <i class="fa fa-times"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl p-5 shadow-sm">
+            <h3 class="font-bold mb-3">清单模板</h3>
+            <div class="space-y-3">
+              <button
+                class="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex justify-between items-center btn-effect"
+                onclick="loadTemplate('shortTrip')"
+              >
+                <div>
+                  <span class="font-medium">短途旅行</span>
+                  <p class="text-sm text-gray-500">适合1-2天出行</p>
+                </div>
+                <i class="fa fa-arrow-right text-gray-400"></i>
+              </button>
+
+              <button
+                class="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex justify-between items-center btn-effect"
+                onclick="loadTemplate('longTrip')"
+              >
+                <div>
+                  <span class="font-medium">长途旅行</span>
+                  <p class="text-sm text-gray-500">适合3天以上</p>
+                </div>
+                <i class="fa fa-arrow-right text-gray-400"></i>
+              </button>
+
+              <button
+                class="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex justify-between items-center btn-effect"
+                onclick="loadTemplate('camp')"
+              >
+                <div>
+                  <span class="font-medium">露营装备</span>
+                  <p class="text-sm text-gray-500">适合户外露营</p>
+                </div>
+                <i class="fa fa-arrow-right text-gray-400"></i>
+              </button>
+            </div>
+
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+              <h4 class="font-bold mb-2">完成进度</h4>
+              <p class="text-sm text-gray-500 mb-2">
+                <span id="completedCount">0</span>/<span id="totalCount"
+                  >2</span
+                >
+                项
+              </p>
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div
+                  id="progressBar"
+                  class="bg-purple-500 h-2.5 rounded-full"
+                  style="width: 0%"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 编辑活动模态框 -->
+    <div
+      id="activityModal"
+      class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center"
+    >
+      <div class="bg-white rounded-xl p-5 w-full max-w-md">
+        <h3 class="font-bold text-xl mb-4">编辑活动</h3>
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-1">活动名称</label>
+          <input
+            type="text"
+            id="activityName"
+            class="w-full px-4 py-2 border border-gray-200 rounded-lg input-focus"
+          />
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-1">时间</label>
+          <input
+            type="time"
+            id="activityTime"
+            class="w-full px-4 py-2 border border-gray-200 rounded-lg input-focus"
+          />
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-1">备注</label>
+          <textarea
+            id="activityNote"
+            rows="3"
+            class="w-full px-4 py-2 border border-gray-200 rounded-lg input-focus"
+          ></textarea>
+        </div>
+        <div class="flex gap-2 justify-end">
+          <button
+            id="cancelActivityBtn"
+            class="border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors btn-effect"
+          >
+            取消
+          </button>
+          <button
+            id="saveActivityBtn"
+            class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors btn-effect"
+          >
+            保存
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="bg-white border-t mt-10 py-6">
+      <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
+        <p>Travel journal &copy; 开始记录你的旅途吧</p>
+        <p class="mt-1">( •̀ ω •́ )y</p>
+      </div>
+    </footer>
+
+    <script>
+      // 中国省份和城市数据
+      const chinaRegions = {
+        北京市: ["北京市"],
+        上海市: ["上海市"],
+        广东省: [
+          "广州市",
+          "深圳市",
+          "珠海市",
+          "汕头市",
+          "佛山市",
+          "韶关市",
+          "湛江市",
+          "肇庆市",
+          "江门市",
+          "茂名市",
+        ],
+        江苏省: [
+          "南京市",
+          "无锡市",
+          "徐州市",
+          "常州市",
+          "苏州市",
+          "南通市",
+          "连云港市",
+          "淮安市",
+          "盐城市",
+          "扬州市",
+        ],
+        浙江省: [
+          "杭州市",
+          "宁波市",
+          "温州市",
+          "嘉兴市",
+          "湖州市",
+          "绍兴市",
+          "金华市",
+          "衢州市",
+          "舟山市",
+          "台州市",
+        ],
+        四川省: [
+          "成都市",
+          "自贡市",
+          "攀枝花市",
+          "泸州市",
+          "德阳市",
+          "绵阳市",
+          "广元市",
+          "遂宁市",
+          "内江市",
+        ],
+        山东省: [
+          "济南市",
+          "青岛市",
+          "淄博市",
+          "枣庄市",
+          "东营市",
+          "烟台市",
+          "潍坊市",
+          "济宁市",
+          "泰安市",
+        ],
+        河南省: [
+          "郑州市",
+          "开封市",
+          "洛阳市",
+          "平顶山市",
+          "安阳市",
+          "鹤壁市",
+          "新乡市",
+          "焦作市",
+          "濮阳市",
+        ],
+        湖北省: [
+          "武汉市",
+          "黄石市",
+          "十堰市",
+          "宜昌市",
+          "襄阳市",
+          "鄂州市",
+          "荆门市",
+          "孝感市",
+          "荆州市",
+        ],
+        湖南省: [
+          "长沙市",
+          "株洲市",
+          "湘潭市",
+          "衡阳市",
+          "邵阳市",
+          "岳阳市",
+          "常德市",
+          "张家界市",
+          "益阳市",
+        ],
+        河北省: [
+          "石家庄市",
+          "唐山市",
+          "秦皇岛市",
+          "邯郸市",
+          "邢台市",
+          "保定市",
+          "张家口市",
+          "承德市",
+        ],
+        陕西省: [
+          "西安市",
+          "铜川市",
+          "宝鸡市",
+          "咸阳市",
+          "渭南市",
+          "延安市",
+          "汉中市",
+          "榆林市",
+        ],
+        福建省: [
+          "福州市",
+          "厦门市",
+          "莆田市",
+          "三明市",
+          "泉州市",
+          "漳州市",
+          "南平市",
+          "龙岩市",
+        ],
+        安徽省: [
+          "合肥市",
+          "芜湖市",
+          "蚌埠市",
+          "淮南市",
+          "马鞍山市",
+          "淮北市",
+          "铜陵市",
+          "安庆市",
+        ],
+        江西省: [
+          "南昌市",
+          "景德镇市",
+          "萍乡市",
+          "九江市",
+          "新余市",
+          "鹰潭市",
+          "赣州市",
+          "吉安市",
+        ],
+        重庆市: ["重庆市"],
+        辽宁省: [
+          "沈阳市",
+          "大连市",
+          "鞍山市",
+          "抚顺市",
+          "本溪市",
+          "丹东市",
+          "锦州市",
+          "营口市",
+        ],
+        黑龙江省: [
+          "哈尔滨市",
+          "齐齐哈尔市",
+          "鸡西市",
+          "鹤岗市",
+          "双鸭山市",
+          "大庆市",
+          "伊春市",
+        ],
+        山西省: [
+          "太原市",
+          "大同市",
+          "阳泉市",
+          "长治市",
+          "晋城市",
+          "朔州市",
+          "晋中市",
+          "运城市",
+        ],
+        甘肃省: [
+          "兰州市",
+          "嘉峪关市",
+          "金昌市",
+          "白银市",
+          "天水市",
+          "武威市",
+          "张掖市",
+          "平凉市",
+        ],
+        云南省: [
+          "昆明市",
+          "曲靖市",
+          "玉溪市",
+          "保山市",
+          "昭通市",
+          "丽江市",
+          "普洱市",
+          "临沧市",
+        ],
+        贵州省: ["贵阳市", "六盘水市", "遵义市", "安顺市", "毕节市", "铜仁市"],
+        青海省: [
+          "西宁市",
+          "海东市",
+          "海北藏族自治州",
+          "黄南藏族自治州",
+          "海南藏族自治州",
+        ],
+        海南省: ["海口市", "三亚市", "三沙市", "儋州市"],
+        台湾省: [
+          "台北市",
+          "高雄市",
+          "基隆市",
+          "台中市",
+          "台南市",
+          "新竹市",
+          "嘉义市",
+        ],
+        内蒙古自治区: [
+          "呼和浩特市",
+          "包头市",
+          "乌海市",
+          "赤峰市",
+          "通辽市",
+          "鄂尔多斯市",
+        ],
+        广西壮族自治区: [
+          "南宁市",
+          "柳州市",
+          "桂林市",
+          "梧州市",
+          "北海市",
+          "防城港市",
+          "钦州市",
+        ],
+        宁夏回族自治区: ["银川市", "石嘴山市", "吴忠市", "固原市", "中卫市"],
+        新疆维吾尔自治区: ["乌鲁木齐市", "克拉玛依市", "吐鲁番市", "哈密市"],
+        西藏自治区: ["拉萨市", "日喀则市", "昌都市", "林芝市"],
+      };
+
+      // 导航按钮样式
+      document.querySelectorAll(".nav-btn").forEach((btn) => {
+        btn.classList.add("hover:bg-gray-100", "transition-colors");
+      });
+
+      // 页面切换功能
+      function showSection(sectionId) {
+        // 隐藏所有区域
+        document.querySelectorAll("section").forEach((section) => {
+          section.classList.add("hidden");
+        });
+        // 显示目标区域
+        document.getElementById(sectionId).classList.remove("hidden");
+        // 更新导航按钮状态
+        document.querySelectorAll(".nav-btn").forEach((btn) => {
+          btn.classList.remove("bg-primary/10", "text-primary", "font-medium");
+          btn.classList.remove("active");
+        });
+        // 对应按钮高亮
+        if (sectionId === "homeSection") {
+          document
+            .getElementById("homeBtn")
+            .classList.add("bg-primary/10", "text-primary", "font-medium");
+        } else if (sectionId === "tripSection") {
+          document
+            .getElementById("tripBtn")
+            .classList.add("bg-primary/10", "text-primary", "font-medium");
+          loadTrips(); // 加载行程数据
+        } else if (sectionId === "diarySection") {
+          document
+            .getElementById("diaryBtn")
+            .classList.add("bg-primary/10", "text-primary", "font-medium");
+          loadDiaries(); // 加载手账数据
+        } else if (sectionId === "randomSection") {
+          document
+            .getElementById("randomBtn")
+            .classList.add("bg-primary/10", "text-primary", "font-medium");
+          initProvinceSelector(); // 初始化省份选择器
+        } else if (sectionId === "checklistSection") {
+          // 清单页面不对应顶部导航，保持上一个选中状态
+        }
+      }
+
+      // 导航按钮点击事件
+      document
+        .getElementById("homeBtn")
+        .addEventListener("click", () => showSection("homeSection"));
+      document
+        .getElementById("tripBtn")
+        .addEventListener("click", () => showSection("tripSection"));
+      document
+        .getElementById("diaryBtn")
+        .addEventListener("click", () => showSection("diarySection"));
+      document
+        .getElementById("randomBtn")
+        .addEventListener("click", () => showSection("randomSection"));
+
+      // 初始化日期为今天
+      document.getElementById("diaryDate").valueAsDate = new Date();
+      document.getElementById("tripStartDate").valueAsDate = new Date();
+      // 设置结束日期为默认3天后
+      const defaultEndDate = new Date();
+      defaultEndDate.setDate(defaultEndDate.getDate() + 3);
+      document.getElementById("tripEndDate").valueAsDate = defaultEndDate;
+
+      // 行程规划功能
+      let trips = [];
+      let currentTripId = null;
+      let currentDay = 1;
+
+      // 加载行程
+      function loadTrips() {
+        const savedTrips = getFromLocalStorage("trips") || [];
+        trips = savedTrips;
+        renderTripTabs();
+
+        if (trips.length > 0 && !currentTripId) {
+          // 如果有行程但没有选中的，默认选中第一个
+          currentTripId = trips[0].id;
+          showCurrentTrip();
+        } else if (trips.length === 0) {
+          // 没有行程
+          document.getElementById("currentTripInfo").classList.add("hidden");
+          document.getElementById("tripContent").classList.add("hidden");
+          document.getElementById("noTripSelected").classList.remove("hidden");
+        } else {
+          // 显示当前选中的行程
+          showCurrentTrip();
+        }
+      }
+
+      // 渲染行程标签
+      function renderTripTabs() {
+        const tripTabsContainer = document.getElementById("tripTabs");
+        tripTabsContainer.innerHTML = "";
+
+        trips.forEach((trip) => {
+          const tab = document.createElement("div");
+          tab.className = `px-3 py-2 rounded-lg cursor-pointer transition-colors btn-effect ${
+            currentTripId === trip.id
+              ? "bg-primary text-white"
+              : "bg-gray-100 hover:bg-gray-200"
+          }`;
+          tab.textContent = trip.name;
+          tab.addEventListener("click", () => {
+            currentTripId = trip.id;
+            currentDay = 1;
+            renderTripTabs();
+            showCurrentTrip();
+          });
+          tripTabsContainer.appendChild(tab);
+        });
+      }
+
+      // 显示当前行程
+      function showCurrentTrip() {
+        const currentTrip = trips.find((trip) => trip.id === currentTripId);
+        if (!currentTrip) return;
+
+        document.getElementById("noTripSelected").classList.add("hidden");
+        document.getElementById("currentTripInfo").classList.remove("hidden");
+        document.getElementById("tripContent").classList.remove("hidden");
+
+        // 更新行程信息
+        document.getElementById("currentTripTitle").textContent =
+          currentTrip.name;
+
+        const startDate = new Date(currentTrip.startDate);
+        const endDate = new Date(currentTrip.endDate);
+        document.getElementById(
+          "currentTripDateRange"
+        ).textContent = `${formatDateForDisplay(
+          startDate
+        )} - ${formatDateForDisplay(endDate)}`;
+
+        const days =
+          Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+        document.getElementById("currentTripDays").textContent = `${days}天`;
+
+        // 更新日期选择器
+        renderDaySelector(currentTrip);
+
+        // 显示当前天的内容
+        showDayContent();
+      }
+
+      // 渲染日期选择器
+      function renderDaySelector(currentTrip) {
+        const daySelector = document.getElementById("daySelector");
+        daySelector.innerHTML = "";
+
+        const startDate = new Date(currentTrip.startDate);
+        const endDate = new Date(currentTrip.endDate);
+        const days =
+          Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+        for (let i = 1; i <= days; i++) {
+          const option = document.createElement("option");
+          option.value = i;
+
+          const date = new Date(startDate);
+          date.setDate(startDate.getDate() + (i - 1));
+
+          option.textContent = `第${i}天 (${formatDateForDisplay(date)})`;
+          if (i === currentDay) {
+            option.selected = true;
+          }
+          daySelector.appendChild(option);
+        }
+      }
+
+      // 显示当天内容
+      function showDayContent() {
+        const currentTrip = trips.find((trip) => trip.id === currentTripId);
+        if (!currentTrip) return;
+
+        // 确保当天数据存在
+        if (!currentTrip.days) currentTrip.days = {};
+        if (!currentTrip.days[currentDay]) {
+          currentTrip.days[currentDay] = {
+            locations: [],
+            activities: [],
+            files: [],
+          };
+        }
+
+        // 渲染地点
+        renderLocations(currentTrip.days[currentDay].locations);
+
+        // 渲染活动
+        renderActivities(currentTrip.days[currentDay].activities);
+
+        // 渲染文件
+        renderTripFiles(currentTrip.days[currentDay].files);
+
+        // 保存行程
+        saveTrips();
+      }
+
+      // 渲染地点
+      function renderLocations(locations) {
+        const container = document.getElementById("locationsContainer");
+
+        if (locations.length === 0) {
+          container.innerHTML = `
+          <div class="text-center text-gray-400 py-10" id="noLocationsMessage">
+            <i class="fa fa-map-o text-2xl mb-2"></i>
+            <p>添加地点来规划你的行程</p>
+          </div>
+        `;
+          // 清除路线
+          document.getElementById("routesContainer").innerHTML = "";
+          return;
+        }
+
+        container.innerHTML = "";
+
+        locations.forEach((location, index) => {
+          const locationEl = document.createElement("div");
+          locationEl.className =
+            "mb-4 p-3 bg-white border border-gray-200 rounded-lg shadow-sm relative";
+          locationEl.setAttribute("data-id", location.id);
+
+          let imageHtml = "";
+          if (location.image) {
+            imageHtml = `
+            <div class="mb-2 rounded overflow-hidden">
+              <img src="${location.image}" alt="${location.name}" class="w-full h-32 object-cover">
+            </div>
+          `;
+          }
+
+          locationEl.innerHTML = `
+          <div class="flex justify-between items-start mb-2">
+            <h4 class="font-bold flex items-center">
+              <span class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center mr-2 text-sm">${
+                index + 1
+              }</span>
+              ${location.name}
+            </h4>
+            <div class="flex gap-1">
+              <button class="text-gray-500 hover:text-primary p-1 btn-effect" onclick="editLocation('${
+                location.id
+              }')">
+                <i class="fa fa-pencil"></i>
+              </button>
+              <button class="text-gray-500 hover:text-red-500 p-1 btn-effect" onclick="deleteLocation('${
+                location.id
+              }')">
+                <i class="fa fa-trash"></i>
+              </button>
+            </div>
+          </div>
+          ${imageHtml}
+          ${
+            location.note
+              ? `<p class="text-gray-600 text-sm mb-2"><i class="fa fa-sticky-note-o mr-1"></i>${location.note}</p>`
+              : ""
+          }
+          ${
+            location.description
+              ? `<p class="text-gray-600 text-sm mb-2 text-primary/80"><i class="fa fa-info-circle mr-1"></i>${location.description.substring(
+                  0,
+                  100
+                )}${location.description.length > 100 ? "..." : ""}</p>`
+              : ""
+          }
+          <div class="text-xs text-gray-500">
+            <i class="fa fa-clock-o mr-1"></i> 添加于 ${new Date(
+              location.createdAt
+            ).toLocaleString()}
+          </div>
+        `;
+
+          container.appendChild(locationEl);
+        });
+
+        // 绘制路线
+        drawRoutes(locations.length);
+      }
+
+      // 绘制路线箭头
+      function drawRoutes(count) {
+        const routesContainer = document.getElementById("routesContainer");
+        routesContainer.innerHTML = "";
+
+        if (count < 2) return; // 至少需要两个地点才有路线
+
+        const containerRect = document
+          .getElementById("locationsContainer")
+          .getBoundingClientRect();
+        const locationElements = document.querySelectorAll(
+          "#locationsContainer > div"
+        );
+
+        locationElements.forEach((el, index) => {
+          if (index < locationElements.length - 1) {
+            const currentRect = el.getBoundingClientRect();
+            const nextRect =
+              locationElements[index + 1].getBoundingClientRect();
+
+            // 计算相对于容器的位置
+            const startX =
+              currentRect.left - containerRect.left + currentRect.width / 2;
+            const startY =
+              currentRect.top - containerRect.top + currentRect.height;
+            const endX =
+              nextRect.left - containerRect.left + nextRect.width / 2;
+            const endY = nextRect.top - containerRect.top;
+
+            // 计算距离和角度
+            const distance = Math.sqrt(
+              Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2)
+            );
+            const angle =
+              (Math.atan2(endY - startY, endX - startX) * 180) / Math.PI;
+
+            // 创建箭头
+            const arrow = document.createElement("div");
+            arrow.className = "route-arrow";
+            arrow.style.width = `${distance}px`;
+            arrow.style.left = `${startX}px`;
+            arrow.style.top = `${startY}px`;
+            arrow.style.transform = `rotate(${angle}deg)`;
+
+            routesContainer.appendChild(arrow);
+          }
+        });
+      }
+
+      // 渲染活动
+      function renderActivities(activities) {
+        const container = document.getElementById("activitiesContainer");
+
+        if (activities.length === 0) {
+          container.innerHTML = `
+          <div class="text-center text-gray-400 py-6" id="noActivitiesMessage">
+            <p>添加今天的活动安排</p>
+          </div>
+        `;
+          return;
+        }
+
+        // 按时间排序
+        const sortedActivities = [...activities].sort((a, b) =>
+          a.time.localeCompare(b.time)
+        );
+
+        container.innerHTML = "";
+
+        sortedActivities.forEach((activity) => {
+          const activityEl = document.createElement("div");
+          activityEl.className =
+            "p-3 bg-white border border-gray-200 rounded-lg shadow-sm flex justify-between items-center";
+          activityEl.setAttribute("data-id", activity.id);
+
+          let timeDisplay = activity.time ? activity.time : "未设置时间";
+
+          activityEl.innerHTML = `
+          <div>
+            <h4 class="font-medium">${activity.name}</h4>
+            <div class="flex items-center text-sm text-gray-500 mt-1">
+              <i class="fa fa-clock-o mr-1"></i> ${timeDisplay}
+              ${
+                activity.note
+                  ? `<span class="ml-2"><i class="fa fa-comment-o mr-1"></i>${activity.note}</span>`
+                  : ""
+              }
+            </div>
+          </div>
+          <div class="flex gap-1">
+            <button class="text-gray-500 hover:text-primary p-1 btn-effect" onclick="editActivity('${
+              activity.id
+            }')">
+              <i class="fa fa-pencil"></i>
+            </button>
+            <button class="text-gray-500 hover:text-red-500 p-1 btn-effect" onclick="deleteActivity('${
+              activity.id
+            }')">
+              <i class="fa fa-trash"></i>
+            </button>
+          </div>
+        `;
+
+          container.appendChild(activityEl);
+        });
+      }
+
+      // 渲染行程文件
+      function renderTripFiles(files) {
+        const container = document.getElementById("tripFilesContainer");
+
+        if (files.length === 0) {
+          container.innerHTML = `
+          <div class="text-center text-gray-400 py-6 col-span-full" id="noFilesMessage">
+            <i class="fa fa-file-o text-2xl mb-2"></i>
+            <p>上传图片或文件作为参考</p>
+          </div>
+        `;
+          return;
+        }
+
+        container.innerHTML = "";
+
+        files.forEach((file) => {
+          const fileEl = document.createElement("div");
+          fileEl.className =
+            "p-3 bg-white border border-gray-200 rounded-lg shadow-sm relative overflow-hidden";
+
+          let fileIcon = "fa-file-o";
+          let filePreview = "";
+
+          // 根据文件类型显示不同图标和预览
+          if (file.type.startsWith("image/")) {
+            fileIcon = "fa-file-image-o";
+            filePreview = `
+            <img src="${file.url}" alt="预览" class="w-full h-32 object-cover rounded mb-2">
+          `;
+          } else if (file.type.includes("pdf")) {
+            fileIcon = "fa-file-pdf-o";
+          } else if (file.type.includes("word")) {
+            fileIcon = "fa-file-word-o";
+          } else if (file.type.includes("excel")) {
+            fileIcon = "fa-file-excel-o";
+          }
+
+          fileEl.innerHTML = `
+          ${filePreview}
+          <div class="truncate text-sm font-medium">${file.name}</div>
+          <div class="text-xs text-gray-500 mt-1">${(file.size / 1024).toFixed(
+            1
+          )} KB</div>
+          <button class="absolute top-1 right-1 text-gray-400 hover:text-red-500 p-1 bg-white/80 rounded-full btn-effect" onclick="deleteTripFile('${
+            file.id
+          }')">
+            <i class="fa fa-times"></i>
+          </button>
+        `;
+
+          container.appendChild(fileEl);
+        });
+      }
+
+      // 添加行程
+      document.getElementById("addTripBtn").addEventListener("click", () => {
+        const name = document.getElementById("newTripName").value.trim();
+        const startDate = document.getElementById("tripStartDate").value;
+        const endDate = document.getElementById("tripEndDate").value;
+
+        if (!name) {
+          showToast("请输入行程名称", "warning");
+          return;
+        }
+
+        if (!startDate || !endDate) {
+          showToast("请选择开始和结束日期", "warning");
+          return;
+        }
+
+        if (new Date(startDate) > new Date(endDate)) {
+          showToast("开始日期不能晚于结束日期", "warning");
+          return;
+        }
+
+        const newTrip = {
+          id: Date.now().toString(),
+          name: name,
+          startDate: startDate,
+          endDate: endDate,
+          days: {}, // 存储每天的信息
+        };
+
+        trips.push(newTrip);
+        saveTrips();
+
+        // 选中新创建的行程
+        currentTripId = newTrip.id;
+        currentDay = 1;
+
+        // 重新渲染
+        renderTripTabs();
+        showCurrentTrip();
+
+        // 清空输入
+        document.getElementById("newTripName").value = "";
+
+        showToast("行程创建成功");
+      });
+
+      // 编辑行程按钮点击事件
+      document.getElementById("editTripBtn").addEventListener("click", () => {
+        const currentTrip = trips.find((trip) => trip.id === currentTripId);
+        if (!currentTrip) return;
+
+        // 填充表单
+        document.getElementById("editTripName").value = currentTrip.name;
+        document.getElementById("editTripStartDate").value =
+          currentTrip.startDate;
+        document.getElementById("editTripEndDate").value = currentTrip.endDate;
+
+        // 显示模态框
+        document.getElementById("editTripModal").classList.remove("hidden");
+        document.getElementById("editTripModal").classList.add("flex");
+      });
+
+      // 取消编辑行程
+      document
+        .getElementById("cancelEditTripBtn")
+        .addEventListener("click", () => {
+          document.getElementById("editTripModal").classList.add("hidden");
+          document.getElementById("editTripModal").classList.remove("flex");
+        });
+
+      // 保存编辑后的行程
+      document
+        .getElementById("saveEditTripBtn")
+        .addEventListener("click", () => {
+          const currentTrip = trips.find((trip) => trip.id === currentTripId);
+          if (!currentTrip) return;
+
+          const name = document.getElementById("editTripName").value.trim();
+          const startDate = document.getElementById("editTripStartDate").value;
+          const endDate = document.getElementById("editTripEndDate").value;
+
+          if (!name) {
+            showToast("请输入行程名称", "warning");
+            return;
+          }
+
+          if (!startDate || !endDate) {
+            showToast("请选择开始和结束日期", "warning");
+            return;
+          }
+
+          if (new Date(startDate) > new Date(endDate)) {
+            showToast("开始日期不能晚于结束日期", "warning");
+            return;
+          }
+
+          // 更新行程信息
+          currentTrip.name = name;
+          currentTrip.startDate = startDate;
+          currentTrip.endDate = endDate;
+
+          // 如果缩短了行程，需要处理可能超出的天数
+          const days =
+            Math.ceil(
+              (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)
+            ) + 1;
+          if (currentDay > days) {
+            currentDay = days;
+          }
+
+          saveTrips();
+
+          // 重新渲染
+          renderTripTabs();
+          showCurrentTrip();
+
+          // 关闭模态框
+          document.getElementById("editTripModal").classList.add("hidden");
+          document.getElementById("editTripModal").classList.remove("flex");
+
+          showToast("行程更新成功");
+        });
+
+      // 保存行程数据
+      function saveTrips() {
+        saveToLocalStorage("trips", trips);
+      }
+
+      // 添加地点
+      document
+        .getElementById("addLocationBtn")
+        .addEventListener("click", () => {
+          const name = document.getElementById("locationName").value.trim();
+          if (!name) {
+            showToast("请输入地点名称", "warning");
+            return;
+          }
+
+          const currentTrip = trips.find((trip) => trip.id === currentTripId);
+          if (!currentTrip) return;
+
+          // 确保当天数据存在
+          if (!currentTrip.days) currentTrip.days = {};
+          if (!currentTrip.days[currentDay]) {
+            currentTrip.days[currentDay] = {
+              locations: [],
+              activities: [],
+              files: [],
+            };
+          }
+
+          // 获取临时存储的图片（如果有）
+          const image = sessionStorage.getItem("tempLocationImage");
+          if (image) {
+            sessionStorage.removeItem("tempLocationImage");
+          }
+
+          // 检查是否有匹配的景点信息
+          const locationSearch = document
+            .getElementById("locationSearch")
+            .value.trim()
+            .toLowerCase();
+          let description = "";
+          if (locationSearch) {
+            const matchedAttraction = searchAttractions(locationSearch);
+            if (matchedAttraction && matchedAttraction.length > 0) {
+              description = matchedAttraction[0].description;
+            }
+          }
+
+          const newLocation = {
+            id: Date.now().toString(),
+            name: name,
+            note: document.getElementById("locationNote").value.trim(),
+            image: image || null,
+            description: description,
+            createdAt: new Date().toISOString(),
+          };
+
+          currentTrip.days[currentDay].locations.push(newLocation);
+          saveTrips();
+
+          // 重新渲染
+          renderLocations(currentTrip.days[currentDay].locations);
+
+          // 清空输入
+          document.getElementById("locationName").value = "";
+          document.getElementById("locationNote").value = "";
+          document.getElementById("locationImage").value = "";
+          document.getElementById("locationSearch").value = "";
+          document
+            .getElementById("locationSuggestions")
+            .classList.add("hidden");
+
+          showToast("地点添加成功");
+        });
+
+      // 搜索景点
+      document
+        .getElementById("searchLocationBtn")
+        .addEventListener("click", () => {
+          performLocationSearch();
+        });
+
+      // 地点搜索输入框事件
+      document
+        .getElementById("locationSearch")
+        .addEventListener("input", () => {
+          performLocationSearch();
+        });
+
+      // 执行地点搜索
+      function performLocationSearch() {
+        const searchTerm = document
+          .getElementById("locationSearch")
+          .value.trim();
+        if (!searchTerm) {
+          document
+            .getElementById("locationSuggestions")
+            .classList.add("hidden");
+          return;
+        }
+
+        const results = searchAttractions(searchTerm);
+        const suggestionsContainer = document.getElementById(
+          "locationSuggestions"
+        );
+
+        if (results.length === 0) {
+          suggestionsContainer.innerHTML =
+            '<div class="p-2 text-gray-500">没有找到匹配的景点</div>';
+          suggestionsContainer.classList.remove("hidden");
+          return;
+        }
+
+        // 显示搜索结果
+        suggestionsContainer.innerHTML = "";
+        results.slice(0, 5).forEach((attraction) => {
+          const suggestion = document.createElement("div");
+          suggestion.className = "p-2 hover:bg-gray-100 cursor-pointer";
+          suggestion.innerHTML = `
+          <div class="font-medium">${attraction.name}</div>
+          <div class="text-xs text-gray-500">${attraction.city}, ${attraction.province}</div>
+        `;
+
+          suggestion.addEventListener("click", () => {
+            document.getElementById("locationName").value = attraction.name;
+            document
+              .getElementById("locationSuggestions")
+              .classList.add("hidden");
+
+            // 填充一些基本信息作为备注
+            if (
+              attraction.description &&
+              document.getElementById("locationNote").value === ""
+            ) {
+              document.getElementById("locationNote").value =
+                attraction.description.substring(0, 100) +
+                (attraction.description.length > 100 ? "..." : "");
+            }
+          });
+
+          suggestionsContainer.appendChild(suggestion);
+        });
+
+        // 定位建议框
+        const searchInput = document.getElementById("locationSearch");
+        const rect = searchInput.getBoundingClientRect();
+        suggestionsContainer.style.width = `${rect.width}px`;
+        suggestionsContainer.style.left = `${rect.left + window.scrollX}px`;
+        suggestionsContainer.style.top = `${rect.bottom + window.scrollY}px`;
+
+        suggestionsContainer.classList.remove("hidden");
+      }
+
+      // 点击页面其他地方隐藏搜索建议
+      document.addEventListener("click", (e) => {
+        const suggestions = document.getElementById("locationSuggestions");
+        const searchInput = document.getElementById("locationSearch");
+        const searchBtn = document.getElementById("searchLocationBtn");
+
+        if (
+          !suggestions.contains(e.target) &&
+          e.target !== searchInput &&
+          e.target !== searchBtn
+        ) {
+          suggestions.classList.add("hidden");
+        }
+      });
+
+      // 处理地点图片上传
+      function handleLocationImageUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          // 临时存储图片，等待添加地点时一起保存
+          sessionStorage.setItem("tempLocationImage", e.target.result);
+          showToast("图片已准备好，点击添加地点完成操作");
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // 编辑地点
+      function editLocation(locationId) {
+        const currentTrip = trips.find((trip) => trip.id === currentTripId);
+        if (!currentTrip || !currentTrip.days || !currentTrip.days[currentDay])
+          return;
+
+        const location = currentTrip.days[currentDay].locations.find(
+          (loc) => loc.id === locationId
+        );
+        if (!location) return;
+
+        // 填充表单
+        document.getElementById("locationName").value = location.name;
+        document.getElementById("locationNote").value = location.note || "";
+
+        // 滚动到表单
+        document
+          .getElementById("locationName")
+          .scrollIntoView({ behavior: "smooth", block: "center" });
+
+        // 聚焦
+        document.getElementById("locationName").focus();
+
+        // 移除添加按钮事件，添加更新按钮事件
+        const addBtn = document.getElementById("addLocationBtn");
+        const originalText = addBtn.innerHTML;
+
+        addBtn.innerHTML = '<i class="fa fa-save mr-1"></i> 更新地点';
+        addBtn.onclick = function updateLocationHandler() {
+          const newName = document.getElementById("locationName").value.trim();
+          if (!newName) {
+            showToast("请输入地点名称", "warning");
+            return;
+          }
+
+          // 更新地点信息
+          location.name = newName;
+          location.note = document.getElementById("locationNote").value.trim();
+
+          saveTrips();
+
+          // 重新渲染
+          renderLocations(currentTrip.days[currentDay].locations);
+
+          // 清空输入
+          document.getElementById("locationName").value = "";
+          document.getElementById("locationNote").value = "";
+          document.getElementById("locationImage").value = "";
+
+          // 恢复按钮
+          addBtn.innerHTML = originalText;
+          addBtn.onclick = addLocationBtnClickHandler;
+
+          showToast("地点更新成功");
+        };
+
+        // 保存原始的点击事件处理函数
+        const addLocationBtnClickHandler = addBtn.onclick;
+      }
+
+      // 删除地点
+      function deleteLocation(locationId) {
+        if (!confirm("确定要删除这个地点吗？")) return;
+
+        const currentTrip = trips.find((trip) => trip.id === currentTripId);
+        if (!currentTrip || !currentTrip.days || !currentTrip.days[currentDay])
+          return;
+
+        // 过滤掉要删除的地点
+        currentTrip.days[currentDay].locations = currentTrip.days[
+          currentDay
+        ].locations.filter((loc) => loc.id !== locationId);
+
+        saveTrips();
+
+        // 重新渲染
+        renderLocations(currentTrip.days[currentDay].locations);
+
+        showToast("地点已删除");
+      }
+
+      // 处理行程文件上传
+      function handleTripFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const currentTrip = trips.find((trip) => trip.id === currentTripId);
+        if (!currentTrip) return;
+
+        // 确保当天数据存在
+        if (!currentTrip.days) currentTrip.days = {};
+        if (!currentTrip.days[currentDay]) {
+          currentTrip.days[currentDay] = {
+            locations: [],
+            activities: [],
+            files: [],
+          };
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const newFile = {
+            id: Date.now().toString(),
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            url: e.target.result,
+            uploadedAt: new Date().toISOString(),
+          };
+
+          currentTrip.days[currentDay].files.push(newFile);
+          saveTrips();
+
+          // 重新渲染
+          renderTripFiles(currentTrip.days[currentDay].files);
+
+          // 清空输入
+          document.getElementById("tripFileUpload").value = "";
+
+          showToast("文件上传成功");
+        };
+
+        if (file.type.startsWith("image/")) {
+          reader.readAsDataURL(file);
+        } else {
+          // 对于非图片文件，我们只保存基本信息，不预览内容
+          const newFile = {
+            id: Date.now().toString(),
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            url: "#", // 非图片文件不存储内容
+            uploadedAt: new Date().toISOString(),
+          };
+
+          currentTrip.days[currentDay].files.push(newFile);
+          saveTrips();
+
+          // 重新渲染
+          renderTripFiles(currentTrip.days[currentDay].files);
+
+          // 清空输入
+          document.getElementById("tripFileUpload").value = "";
+
+          showToast("文件信息已保存");
+        }
+      }
+
+      // 删除行程文件
+      function deleteTripFile(fileId) {
+        if (!confirm("确定要删除这个文件吗？")) return;
+
+        const currentTrip = trips.find((trip) => trip.id === currentTripId);
+        if (!currentTrip || !currentTrip.days || !currentTrip.days[currentDay])
+          return;
+
+        // 过滤掉要删除的文件
+        currentTrip.days[currentDay].files = currentTrip.days[
+          currentDay
+        ].files.filter((file) => file.id !== fileId);
+
+        saveTrips();
+
+        // 重新渲染
+        renderTripFiles(currentTrip.days[currentDay].files);
+
+        showToast("文件已删除");
+      }
+
+      // 添加活动按钮点击事件
+      document
+        .getElementById("addActivityBtn")
+        .addEventListener("click", () => {
+          // 清空表单
+          document.getElementById("activityName").value = "";
+          document.getElementById("activityTime").value = "";
+          document.getElementById("activityNote").value = "";
+          // 重置保存按钮事件
+          document.getElementById("saveActivityBtn").onclick = saveNewActivity;
+          // 显示模态框
+          document.getElementById("activityModal").classList.remove("hidden");
+          document.getElementById("activityModal").classList.add("flex");
+        });
+
+      // 取消活动编辑
+      document
+        .getElementById("cancelActivityBtn")
+        .addEventListener("click", () => {
+          document.getElementById("activityModal").classList.add("hidden");
+          document.getElementById("activityModal").classList.remove("flex");
+        });
+
+      // 保存新活动
+      function saveNewActivity() {
+        const name = document.getElementById("activityName").value.trim();
+        if (!name) {
+          showToast("请输入活动名称", "warning");
+          return;
+        }
+
+        const currentTrip = trips.find((trip) => trip.id === currentTripId);
+        if (!currentTrip) return;
+
+        // 确保当天数据存在
+        if (!currentTrip.days) currentTrip.days = {};
+        if (!currentTrip.days[currentDay]) {
+          currentTrip.days[currentDay] = {
+            locations: [],
+            activities: [],
+            files: [],
+          };
+        }
+
+        const newActivity = {
+          id: Date.now().toString(),
+          name: name,
+          time: document.getElementById("activityTime").value,
+          note: document.getElementById("activityNote").value.trim(),
+        };
+
+        currentTrip.days[currentDay].activities.push(newActivity);
+        saveTrips();
+
+        // 重新渲染
+        renderActivities(currentTrip.days[currentDay].activities);
+
+        // 关闭模态框
+        document.getElementById("activityModal").classList.add("hidden");
+        document.getElementById("activityModal").classList.remove("flex");
+
+        showToast("活动添加成功");
+      }
+
+      // 编辑活动
+      function editActivity(activityId) {
+        const currentTrip = trips.find((trip) => trip.id === currentTripId);
+        if (!currentTrip || !currentTrip.days || !currentTrip.days[currentDay])
+          return;
+
+        const activity = currentTrip.days[currentDay].activities.find(
+          (act) => act.id === activityId
+        );
+        if (!activity) return;
+
+        // 填充表单
+        document.getElementById("activityName").value = activity.name;
+        document.getElementById("activityTime").value = activity.time || "";
+        document.getElementById("activityNote").value = activity.note || "";
+
+        // 设置保存按钮事件
+        document.getElementById("saveActivityBtn").onclick = function () {
+          const newName = document.getElementById("activityName").value.trim();
+          if (!newName) {
+            showToast("请输入活动名称", "warning");
+            return;
+          }
+
+          // 更新活动信息
+          activity.name = newName;
+          activity.time = document.getElementById("activityTime").value;
+          activity.note = document.getElementById("activityNote").value.trim();
+
+          saveTrips();
+
+          // 重新渲染
+          renderActivities(currentTrip.days[currentDay].activities);
+
+          // 关闭模态框
+          document.getElementById("activityModal").classList.add("hidden");
+          document.getElementById("activityModal").classList.remove("flex");
+
+          showToast("活动更新成功");
+        };
+
+        // 显示模态框
+        document.getElementById("activityModal").classList.remove("hidden");
+        document.getElementById("activityModal").classList.add("flex");
+      }
+
+      // 删除活动
+      function deleteActivity(activityId) {
+        if (!confirm("确定要删除这个活动吗？")) return;
+
+        const currentTrip = trips.find((trip) => trip.id === currentTripId);
+        if (!currentTrip || !currentTrip.days || !currentTrip.days[currentDay])
+          return;
+
+        // 过滤掉要删除的活动
+        currentTrip.days[currentDay].activities = currentTrip.days[
+          currentDay
+        ].activities.filter((act) => act.id !== activityId);
+
+        saveTrips();
+
+        // 重新渲染
+        renderActivities(currentTrip.days[currentDay].activities);
+
+        showToast("活动已删除");
+      }
+
+      // 天数选择器变化事件
+      document.getElementById("daySelector").addEventListener("change", (e) => {
+        currentDay = parseInt(e.target.value);
+        showDayContent();
+      });
+
+      // 添加天数按钮点击事件
+      document.getElementById("addDayBtn").addEventListener("click", () => {
+        const currentTrip = trips.find((trip) => trip.id === currentTripId);
+        if (!currentTrip) return;
+
+        const startDate = new Date(currentTrip.startDate);
+        const endDate = new Date(currentTrip.endDate);
+        const currentDays =
+          Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+        // 计算新的结束日期（延长一天）
+        const newEndDate = new Date(endDate);
+        newEndDate.setDate(newEndDate.getDate() + 1);
+        currentTrip.endDate = newEndDate.toISOString().split("T")[0];
+
+        // 选中新添加的天数
+        currentDay = currentDays + 1;
+
+        saveTrips();
+
+        // 重新渲染
+        renderDaySelector(currentTrip);
+        showDayContent();
+
+        showToast("已延长行程一天");
+      });
+
+      // 删除行程按钮点击事件
+      document.getElementById("deleteTripBtn").addEventListener("click", () => {
+        if (!confirm("确定要删除这个行程吗？此操作不可恢复。")) return;
+
+        // 过滤掉要删除的行程
+        const tripIndex = trips.findIndex((trip) => trip.id === currentTripId);
+        if (tripIndex === -1) return;
+
+        trips.splice(tripIndex, 1);
+        saveTrips();
+
+        if (trips.length > 0) {
+          // 选中第一个行程
+          currentTripId = trips[0].id;
+          currentDay = 1;
+          renderTripTabs();
+          showCurrentTrip();
+        } else {
+          // 没有行程了
+          document.getElementById("currentTripInfo").classList.add("hidden");
+          document.getElementById("tripContent").classList.add("hidden");
+          document.getElementById("noTripSelected").classList.remove("hidden");
+        }
+
+        showToast("行程已删除");
+      });
+
+      // 手账功能
+      function loadDiaries() {
+        const diaries = getFromLocalStorage("diaries") || [];
+        renderDiaryList(diaries);
+      }
+
+      // 手账功能部分添加删除函数
+      function deleteDiary(diaryId) {
+        if (!confirm("确定要删除这篇手账吗？")) return;
+
+        let diaries = getFromLocalStorage("diaries") || [];
+        // 过滤掉要删除的手账
+        diaries = diaries.filter((diary) => diary.id !== diaryId);
+
+        // 更新本地存储
+        saveToLocalStorage("diaries", diaries);
+
+        // 重新渲染手账列表
+        renderDiaryList(diaries);
+
+        // 如果当前编辑的是被删除的手账，重置表单
+        const currentEditingTitle = document.getElementById("diaryTitle").value;
+        const deletedDiary = diaries.find((d) => d.id === diaryId);
+        if (deletedDiary && deletedDiary.title === currentEditingTitle) {
+          resetDiaryForm();
+        }
+
+        showToast("手账已删除");
+      }
+
+      function renderDiaryList(diaries) {
+        const diaryListContainer = document.getElementById("diaryList");
+
+        if (diaries.length === 0) {
+          diaryListContainer.innerHTML = `
+            <div class="text-center text-gray-400 py-6">
+              <i class="fa fa-book text-2xl mb-2"></i>
+              <p>还没有手账，写一篇吧</p>
+            </div>
+          `;
+          return;
+        }
+
+        // 按日期倒序排列
+        const sortedDiaries = [...diaries].sort(
+          (a, b) => new Date(b.date) - new Date(a.date)
+        );
+
+        diaryListContainer.innerHTML = "";
+
+        sortedDiaries.forEach((diary) => {
+          const diaryEl = document.createElement("div");
+          diaryEl.className =
+            "p-3 bg-white border border-gray-200 rounded-lg shadow-sm cursor-pointer hover:border-primary/30 transition-colors card-hover";
+
+          let previewImage = "";
+          if (diary.photos && diary.photos.length > 0) {
+            previewImage = `<img src="${diary.photos[0]}" alt="预览" class="w-full h-24 object-cover rounded mb-2">`;
+          }
+
+          // 在renderDiaryList函数中更新diaryEl的innerHTML
+          diaryEl.innerHTML = `
+  ${previewImage}
+  <div class="flex justify-between items-start">
+    <h4 class="font-bold truncate">${diary.title}</h4>
+    <button class="text-gray-400 hover:text-red-500 p-1 btn-effect" onclick="deleteDiary('${
+      diary.id
+    }')">
+      <i class="fa fa-trash"></i>
+    </button>
+  </div>
+  <p class="text-sm text-gray-500 mt-1 line-clamp-2">${diary.content.substring(
+    0,
+    50
+  )}${diary.content.length > 50 ? "..." : ""}</p>
+  <p class="text-xs text-gray-400 mt-2">${formatDateForDisplay(
+    new Date(diary.date)
+  )}</p>
+`;
+
+          diaryEl.addEventListener("click", () => {
+            // 加载手账内容到编辑区
+            document.getElementById("diaryTitle").value = diary.title;
+            document.getElementById("diaryContent").value = diary.content;
+            document.getElementById("diaryDate").value = diary.date;
+
+            // 显示照片
+            renderDiaryPhotos(diary.photos || []);
+
+            // 显示取消按钮
+            document
+              .getElementById("cancelDiaryBtn")
+              .classList.remove("hidden");
+
+            // 更改保存按钮行为为更新
+            document.getElementById("saveDiaryBtn").onclick = function () {
+              updateDiary(diary.id);
+            };
+          });
+
+          diaryListContainer.appendChild(diaryEl);
+        });
+      }
+
+      // 渲染手账照片
+      function renderDiaryPhotos(photos) {
+        const container = document.getElementById("diaryPhotos");
+
+        if (photos.length === 0) {
+          container.innerHTML = `
+            <div class="text-gray-400 text-sm flex items-center">
+              <i class="fa fa-camera mr-1"></i> 照片将显示在这里
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = "";
+
+        photos.forEach((photo, index) => {
+          const photoEl = document.createElement("div");
+          photoEl.className = "relative rounded overflow-hidden";
+          photoEl.innerHTML = `
+            <img src="${photo}" alt="照片 ${
+            index + 1
+          }" class="w-24 h-24 object-cover">
+            <button class="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors btn-effect" 
+                    onclick="removeDiaryPhoto(${index})">
+              <i class="fa fa-times"></i>
+            </button>
+          `;
+          container.appendChild(photoEl);
+        });
+      }
+
+      // 处理手账照片上传
+      function handleDiaryImageUpload(event) {
+        const files = event.target.files;
+        if (!files || files.length === 0) return;
+
+        // 获取当前已有的照片
+        let currentPhotos = JSON.parse(
+          sessionStorage.getItem("tempDiaryPhotos") || "[]"
+        );
+
+        // 读取新照片
+        Array.from(files).forEach((file) => {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            currentPhotos.push(e.target.result);
+            sessionStorage.setItem(
+              "tempDiaryPhotos",
+              JSON.stringify(currentPhotos)
+            );
+            renderDiaryPhotos(currentPhotos);
+          };
+          reader.readAsDataURL(file);
+        });
+
+        // 清空输入
+        document.getElementById("diaryImageUpload").value = "";
+      }
+
+      // 移除手账照片
+      function removeDiaryPhoto(index) {
+        let currentPhotos = JSON.parse(
+          sessionStorage.getItem("tempDiaryPhotos") || "[]"
+        );
+        currentPhotos.splice(index, 1);
+        sessionStorage.setItem(
+          "tempDiaryPhotos",
+          JSON.stringify(currentPhotos)
+        );
+        renderDiaryPhotos(currentPhotos);
+      }
+
+      // 保存手账
+      document
+        .getElementById("saveDiaryBtn")
+        .addEventListener("click", saveNewDiary);
+
+      function saveNewDiary() {
+        const title = document.getElementById("diaryTitle").value.trim();
+        const content = document.getElementById("diaryContent").value.trim();
+        const date = document.getElementById("diaryDate").value;
+
+        if (!title) {
+          showToast("请输入手账标题", "warning");
+          return;
+        }
+
+        if (!content) {
+          showToast("请输入手账内容", "warning");
+          return;
+        }
+
+        if (!date) {
+          showToast("请选择日期", "warning");
+          return;
+        }
+
+        const diaries = getFromLocalStorage("diaries") || [];
+        const newDiary = {
+          id: Date.now().toString(),
+          title: title,
+          content: content,
+          date: date,
+          photos: JSON.parse(sessionStorage.getItem("tempDiaryPhotos") || "[]"),
+        };
+
+        diaries.push(newDiary);
+        saveToLocalStorage("diaries", diaries);
+
+        // 重置表单
+        resetDiaryForm();
+
+        // 重新渲染列表
+        renderDiaryList(diaries);
+
+        showToast("手账保存成功");
+      }
+
+      // 更新手账
+      function updateDiary(diaryId) {
+        const title = document.getElementById("diaryTitle").value.trim();
+        const content = document.getElementById("diaryContent").value.trim();
+        const date = document.getElementById("diaryDate").value;
+
+        if (!title) {
+          showToast("请输入手账标题", "warning");
+          return;
+        }
+
+        if (!content) {
+          showToast("请输入手账内容", "warning");
+          return;
+        }
+
+        if (!date) {
+          showToast("请选择日期", "warning");
+          return;
+        }
+
+        let diaries = getFromLocalStorage("diaries") || [];
+        const diaryIndex = diaries.findIndex((d) => d.id === diaryId);
+
+        if (diaryIndex === -1) return;
+
+        // 更新手账
+        diaries[diaryIndex] = {
+          ...diaries[diaryIndex],
+          title: title,
+          content: content,
+          date: date,
+          photos: JSON.parse(sessionStorage.getItem("tempDiaryPhotos") || "[]"),
+        };
+
+        saveToLocalStorage("diaries", diaries);
+
+        // 重置表单
+        resetDiaryForm();
+
+        // 重新渲染列表
+        renderDiaryList(diaries);
+
+        showToast("手账更新成功");
+      }
+
+      // 重置手账表单
+      function resetDiaryForm() {
+        document.getElementById("diaryTitle").value = "";
+        document.getElementById("diaryContent").value = "";
+        document.getElementById("diaryDate").valueAsDate = new Date();
+        sessionStorage.removeItem("tempDiaryPhotos");
+        renderDiaryPhotos([]);
+        document.getElementById("cancelDiaryBtn").classList.add("hidden");
+        // 恢复保存按钮行为为新建
+        document.getElementById("saveDiaryBtn").onclick = saveNewDiary;
+      }
+
+      // 取消手账编辑
+      document
+        .getElementById("cancelDiaryBtn")
+        .addEventListener("click", resetDiaryForm);
+
+      // 初始化省份选择器
+      function initProvinceSelector() {
+        const provinceSelector = document.getElementById("provinceSelector");
+
+        // 已经初始化过则不再重复
+        if (provinceSelector.options.length > 1) return;
+
+        // 添加省份选项
+        Object.keys(chinaRegions).forEach((province) => {
+          const option = document.createElement("option");
+          option.value = province;
+          option.textContent = province;
+          provinceSelector.appendChild(option);
+        });
+
+        // 省份选择变化事件
+        provinceSelector.addEventListener("change", (e) => {
+          const selectedProvince = e.target.value;
+          const citySelector = document.getElementById("citySelector");
+
+          // 清空城市选择器
+          citySelector.innerHTML = '<option value="">所有城市</option>';
+
+          if (selectedProvince) {
+            // 启用城市选择器并添加城市
+            citySelector.disabled = false;
+            chinaRegions[selectedProvince].forEach((city) => {
+              const option = document.createElement("option");
+              option.value = city;
+              option.textContent = city;
+              citySelector.appendChild(option);
+            });
+          } else {
+            // 禁用城市选择器
+            citySelector.disabled = true;
+          }
+        });
+      }
+
+      // 旅行盲盒功能
+      document
+        .getElementById("randomBtnAction")
+        .addEventListener("click", () => {
+          const selectedProvince =
+            document.getElementById("provinceSelector").value;
+          const selectedCity = document.getElementById("citySelector").value;
+
+          // 加载景点数据
+          let eligibleAttractions = attractions;
+
+          // 根据选择的省份筛选
+          if (selectedProvince) {
+            eligibleAttractions = eligibleAttractions.filter(
+              (attr) => attr.province === selectedProvince
+            );
+          }
+
+          // 根据选择的城市筛选
+          if (selectedCity) {
+            eligibleAttractions = eligibleAttractions.filter(
+              (attr) => attr.city === selectedCity
+            );
+          }
+
+          if (eligibleAttractions.length === 0) {
+            showToast("没有找到符合条件的景点", "warning");
+            return;
+          }
+
+          // 随机选择一个景点
+          const randomIndex = Math.floor(
+            Math.random() * eligibleAttractions.length
+          );
+          const selectedAttraction = eligibleAttractions[randomIndex];
+
+          // 显示结果
+          const resultContainer = document.getElementById("randomResult");
+          resultContainer.innerHTML = `
+          <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+            <i class="fa fa-map-marker text-primary text-3xl"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2">${selectedAttraction.name}</h3>
+          <p class="text-gray-600 mb-3">${selectedAttraction.city}, ${selectedAttraction.province}</p>
+          <p class="text-sm text-gray-600 mb-4">${selectedAttraction.description}</p>
+          <div class="flex flex-wrap justify-center gap-2">
+            <button class="bg-primary/10 text-primary px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors btn-effect" 
+                    onclick="addToTrip('${selectedAttraction.name}', '${selectedAttraction.description}')">
+              <i class="fa fa-plus mr-1"></i> 添加到行程
+            </button>
+            <button class="border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors btn-effect" 
+                    onclick="document.getElementById('randomBtnAction').click()">
+              <i class="fa fa-refresh mr-1"></i> 再试一次
+            </button>
+          </div>
+        `;
+        });
+
+      // 添加到行程
+      function addToTrip(attractionName, description) {
+        // 切换到行程页面
+        showSection("tripSection");
+
+        // 如果没有行程，提示创建
+        if (trips.length === 0) {
+          setTimeout(() => {
+            document.getElementById("newTripName").focus();
+            showToast("请先创建一个行程", "info");
+          }, 500);
+          return;
+        }
+
+        // 填充地点信息
+        setTimeout(() => {
+          document.getElementById("locationName").value = attractionName;
+          document.getElementById("locationNote").value =
+            description.substring(0, 100) +
+            (description.length > 100 ? "..." : "");
+          document
+            .getElementById("locationName")
+            .scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 500);
+      }
+
+      // 出行清单功能
+      // 初始化清单计数
+      updateChecklistProgress();
+
+      // 添加清单项
+      document
+        .getElementById("addChecklistBtn")
+        .addEventListener("click", () => {
+          const itemText = document
+            .getElementById("checklistItem")
+            .value.trim();
+          if (!itemText) {
+            showToast("请输入物品名称", "warning");
+            return;
+          }
+
+          // 检查是否已存在
+          const existingItems = document.querySelectorAll(
+            "#checklistContainer .flex"
+          );
+          for (let item of existingItems) {
+            if (item.querySelector("span").textContent === itemText) {
+              showToast("该物品已在清单中", "info");
+              document.getElementById("checklistItem").value = "";
+              return;
+            }
+          }
+
+          const checklistContainer =
+            document.getElementById("checklistContainer");
+
+          const newItem = document.createElement("div");
+          newItem.className =
+            "flex items-center gap-2 p-2 border border-gray-100 rounded-lg";
+          newItem.innerHTML = `
+          <input type="checkbox" class="check-item h-4 w-4 accent-purple-500">
+          <span>${itemText}</span>
+          <button class="ml-auto text-gray-400 hover:text-red-500 delete-item btn-effect">
+            <i class="fa fa-times"></i>
+          </button>
+        `;
+
+          checklistContainer.appendChild(newItem);
+
+          // 添加事件监听
+          newItem
+            .querySelector(".check-item")
+            .addEventListener("change", updateChecklistProgress);
+          newItem
+            .querySelector(".delete-item")
+            .addEventListener("click", function () {
+              newItem.remove();
+              updateChecklistProgress();
+            });
+
+          // 清空输入
+          document.getElementById("checklistItem").value = "";
+
+          // 更新进度
+          updateChecklistProgress();
+
+          showToast("物品已添加到清单");
+        });
+
+      // 加载清单模板
+      function loadTemplate(templateType) {
+        let items = [];
+
+        switch (templateType) {
+          case "shortTrip":
+            items = [
+              "身份证/学生证",
+              "手机",
+              "充电器",
+              "耳机",
+              "少量现金",
+              "换洗衣物",
+              "牙刷毛巾",
+              "纸巾",
+              "雨伞",
+              "常用药品",
+            ];
+            break;
+          case "longTrip":
+            items = [
+              "身份证/学生证",
+              "护照/签证（如需）",
+              "手机",
+              "充电器",
+              "充电宝",
+              "耳机",
+              "钱包",
+              "换洗衣物",
+              "鞋子",
+              "洗漱用品",
+              "护肤品",
+              "化妆品",
+              "毛巾",
+              "纸巾",
+              "雨伞",
+              "常用药品",
+              "相机",
+              "适配器",
+            ];
+            break;
+          case "camp":
+            items = [
+              "帐篷",
+              "睡袋",
+              "防潮垫",
+              "手电筒",
+              "打火机",
+              "便携炉具",
+              "炊具",
+              "食物",
+              "水",
+              "换洗衣物",
+              "户外鞋",
+              "雨衣",
+              "防晒霜",
+              "驱蚊液",
+              "急救包",
+              "多功能刀",
+              "充电宝",
+              "垃圾袋",
+            ];
+            break;
+        }
+
+        const checklistContainer =
+          document.getElementById("checklistContainer");
+
+        // 清空现有项（保留默认项）
+        const defaultItems = Array.from(checklistContainer.children).slice(
+          0,
+          2
+        ); // 保留前2个默认项
+        checklistContainer.innerHTML = "";
+        defaultItems.forEach((item) => checklistContainer.appendChild(item));
+
+        // 添加模板项
+        items.forEach((itemText) => {
+          // 检查是否已存在（默认项）
+          let exists = false;
+          defaultItems.forEach((defaultItem) => {
+            if (defaultItem.querySelector("span").textContent === itemText) {
+              exists = true;
+            }
+          });
+
+          if (exists) return;
+
+          const newItem = document.createElement("div");
+          newItem.className =
+            "flex items-center gap-2 p-2 border border-gray-100 rounded-lg";
+          newItem.innerHTML = `
+            <input type="checkbox" class="check-item h-4 w-4 accent-purple-500">
+            <span>${itemText}</span>
+            <button class="ml-auto text-gray-400 hover:text-red-500 delete-item btn-effect">
+              <i class="fa fa-times"></i>
+            </button>
+          `;
+
+          checklistContainer.appendChild(newItem);
+
+          // 添加事件监听
+          newItem
+            .querySelector(".check-item")
+            .addEventListener("change", updateChecklistProgress);
+          newItem
+            .querySelector(".delete-item")
+            .addEventListener("click", function () {
+              newItem.remove();
+              updateChecklistProgress();
+            });
+        });
+
+        // 更新进度
+        updateChecklistProgress();
+
+        showToast(
+          `已加载${
+            templateType === "shortTrip"
+              ? "短途旅行"
+              : templateType === "longTrip"
+              ? "长途旅行"
+              : "露营装备"
+          }模板`
+        );
+      }
+
+      // 更新清单进度
+      function updateChecklistProgress() {
+        const checkItems = document.querySelectorAll(
+          "#checklistContainer .check-item"
+        );
+        const totalCount = checkItems.length;
+        const completedCount = Array.from(checkItems).filter(
+          (item) => item.checked
+        ).length;
+        const progress =
+          totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+
+        document.getElementById("completedCount").textContent = completedCount;
+        document.getElementById("totalCount").textContent = totalCount;
+        document.getElementById("progressBar").style.width = `${progress}%`;
+      }
+
+      // 为默认清单项添加事件监听
+      document
+        .querySelectorAll("#checklistContainer .check-item")
+        .forEach((item) => {
+          item.addEventListener("change", updateChecklistProgress);
+        });
+
+      document
+        .querySelectorAll("#checklistContainer .delete-item")
+        .forEach((btn) => {
+          btn.addEventListener("click", function () {
+            this.closest(".flex").remove();
+            updateChecklistProgress();
+          });
+        });
+
+      // 工具函数
+      // 本地存储
+      function saveToLocalStorage(key, data) {
+        localStorage.setItem(key, JSON.stringify(data));
+      }
+
+      function getFromLocalStorage(key) {
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : null;
+      }
+
+      // 日期格式化
+      function formatDateForDisplay(date) {
+        return date.toLocaleDateString("zh-CN", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+      }
+
+      // 提示消息
+      function showToast(message, type = "success") {
+        // 创建toast元素
+        const toast = document.createElement("div");
+
+        // 设置样式和图标
+        let bgColor, icon;
+        switch (type) {
+          case "success":
+            bgColor = "bg-green-500";
+            icon = "fa-check-circle";
+            break;
+          case "warning":
+            bgColor = "bg-yellow-500";
+            icon = "fa-exclamation-triangle";
+            break;
+          case "error":
+            bgColor = "bg-red-500";
+            icon = "fa-times-circle";
+            break;
+          case "info":
+            bgColor = "bg-blue-500";
+            icon = "fa-info-circle";
+            break;
+          default:
+            bgColor = "bg-green-500";
+            icon = "fa-check-circle";
+        }
+
+        toast.className = `fixed bottom-4 right-4 ${bgColor} text-white px-4 py-2 rounded-lg shadow-lg flex items-center z-50 transform translate-y-20 opacity-0 transition-all duration-300`;
+        toast.innerHTML = `<i class="fa ${icon} mr-2"></i> ${message}`;
+
+        // 添加到页面
+        document.body.appendChild(toast);
+
+        // 显示toast
+        setTimeout(() => {
+          toast.classList.remove("translate-y-20", "opacity-0");
+        }, 10);
+
+        // 3秒后隐藏
+        setTimeout(() => {
+          toast.classList.add("translate-y-20", "opacity-0");
+          setTimeout(() => {
+            document.body.removeChild(toast);
+          }, 300);
+        }, 3000);
+      }
+
+      // 初始化页面
+      window.addEventListener("DOMContentLoaded", () => {
+        // 默认显示首页
+        showSection("homeSection");
+
+        // 初始化景点搜索功能（与attractions.js关联）
+        window.searchAttractions = function (searchTerm) {
+          if (!window.attractions || window.attractions.length === 0) {
+            return [];
+          }
+
+          const term = searchTerm.toLowerCase();
+          return window.attractions.filter(
+            (attr) =>
+              attr.name.toLowerCase().includes(term) ||
+              attr.description.toLowerCase().includes(term) ||
+              attr.city.toLowerCase().includes(term) ||
+              attr.province.toLowerCase().includes(term)
+          );
+        };
+      });
+    </script>
+  </body>
+</html>

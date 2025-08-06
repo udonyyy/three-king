@@ -1,209 +1,959 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <title>生活记录 - Three KING</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  />
+  <title>生活分享✨ - Three KING</title>
   <link rel="icon" href="atm.jpg" type="image/png/jpg">
-  
-  <!-- ✅ 引入 Font Awesome 图标库 -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <style>
-    body {
-      font-family: "Arial", sans-serif;
-      background-color: #f9f9f9;
-      margin: 0;
-      padding: 30px;
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3b82f6',
+            secondary: '#10b981',
+            neutral: '#f3f4f6',
+          },
+          boxShadow: {
+            card: '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03)',
+            'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto { content-visibility: auto; }
+      .text-balance { text-wrap: balance; }
+      .nav-item {
+        @apply relative px-4 py-2 text-gray-600 hover:text-primary transition-colors duration-200;
+      }
+      .nav-item.active {
+        @apply text-primary font-medium;
+      }
+      .nav-item.active::after {
+        @apply content-[''] absolute bottom-0 left-1/2 transform -translate-x-1/2 w-2 h-2 rounded-full bg-primary;
+      }
+      .page-btn {
+        @apply w-9 h-9 flex items-center justify-center rounded-md border border-gray-200 hover:border-primary hover:text-primary transition-all;
+      }
+      .page-btn.active {
+        @apply bg-primary text-white border-primary;
+      }
+      .page-btn:disabled {
+        @apply opacity-50 cursor-not-allowed hover:border-gray-200 hover:text-gray-500;
+      }
     }
 
-    h1 {
-      text-align: center;
-      color: #333;
+    body { @apply font-inter bg-gray-50 text-gray-800; }
+    .filter-tag {
+      @apply bg-white text-gray-700 px-3 py-1.5 text-sm rounded-full cursor-pointer transition-all hover:bg-gray-100 shadow-sm;
+    }
+    .filter-tag.active { @apply bg-primary text-white shadow-none; }
+    .tag {
+      @apply bg-white text-gray-700 px-3 py-1.5 text-sm rounded-full cursor-pointer transition-all hover:bg-gray-100 shadow-sm;
+    }
+    .tag.active { @apply bg-primary text-white shadow-none; }
+
+    .emoji-picker {
+      @apply grid grid-cols-7 gap-2 mt-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded-lg bg-white shadow-sm;
+    }
+    .emoji-item { @apply text-xl cursor-pointer p-2 rounded transition-all hover:bg-gray-100 hover:scale-110; }
+    .selected-emoji { @apply text-xl relative p-1; }
+    .remove-emoji {
+      @apply absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center cursor-pointer;
     }
 
-    nav {
-      text-align: center;
-      margin-bottom: 30px;
+    .empty-state { @apply text-center py-16 text-gray-500; }
+    .diary-card {
+      @apply bg-white rounded-xl shadow-card p-6 transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1;
     }
+    .file-preview { @apply flex items-center gap-2 p-3 bg-gray-50 rounded-lg mb-3; }
+    .file-icon { @apply bg-gray-100 p-2 rounded; }
 
-    nav a {
-      text-decoration: none;
-      background-color: #007BFF;
-      color: white;
-      padding: 10px 18px;
-      margin: 0 10px;
-      border-radius: 6px;
-      font-size: 14px;
-      display: inline-block;
-      transition: background-color 0.3s;
+    .comment-actions { @apply flex justify-end gap-3 mt-1 text-xs; }
+    .comment-actions button {
+      @apply transition-colors; /* 移除下划线 */
     }
-
-    nav a:hover {
-      background-color: #0056b3;
-    }
-
-    .input-area {
-      max-width: 600px;
-      margin: 0 auto 40px auto;
-      text-align: center;
-    }
-
-    textarea {
-      width: 100%;
-      font-size: 16px;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      resize: vertical;
-      box-sizing: border-box;
-    }
-
-    input[type="file"] {
-      margin-top: 10px;
-    }
-
-    button {
-      background-color: #28a745;
-      color: white;
-      font-size: 16px;
-      padding: 10px 20px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #218838;
-    }
-
-    .post {
-      background-color: #fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      padding: 20px;
-      margin: 30px auto;
-      max-width: 600px;
-      word-wrap: break-word;
-      position: relative;
-    }
-
-    .post img {
-      width: 100%;
-      border-radius: 10px;
-      margin-top: 10px;
-    }
-
-    .time {
-      font-size: 12px;
-      color: #888;
-      text-align: right;
-      margin-top: 10px;
-    }
-
-    /* ✅ 删除按钮样式 */
-    .delete-btn {
-      background: none;
-      border: none;
-      color: #888;
-      font-size: 18px;
-      cursor: pointer;
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      transition: color 0.3s;
-    }
-
-    .delete-btn:hover {
-      color: #dc3545;
-    }
+    .comment-actions button:first-child { @apply text-primary hover:text-primary/80; }
+    .comment-actions button:last-child { @apply text-red-500 hover:text-red-600; }
   </style>
 </head>
+
 <body>
+  <!-- 导航栏（四项居中） -->
+  <header class="bg-white shadow-sm sticky top-0 z-40">
+    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+      <!-- 左侧Logo -->
+      <a href="index.html" class="flex items-center gap-2">
+          <i class="fa fa-paper-plane text-primary text-2xl"></i>
+          <h1 class="text-xl font-bold text-primary">Three King</h1>
+        </a>
 
-  <h1>Three KING 的生活记录 ✨</h1>
+      <!-- 中间导航（四项居中） -->
+      <nav class="hidden md:flex items-center justify-center flex-1">
+        
+        <a href="study.html" class="nav-item" data-nav="study">
+          <i class="fas fa-book mr-1"></i> 学习碎片
+        </a>
+        <a href="#" class="nav-item active" data-nav="life">
+          <i class="fas fa-smile mr-1"></i> 生活分享
+        </a>
+        <a href="contact.html" class="nav-item" data-nav="contact">
+          <i class="fas fa-envelope mr-1"></i> 联系方式
+        </a>
+      </nav>
 
-  <nav>
-    <a href="index.html">返回主页</a>
-    <a href="about.html">关于我们</a>
-    <a href="contact.html">联系方式</a>
-  </nav>
+      <!-- 右侧移动端按钮 -->
+      <button class="md:hidden text-gray-600 hover:text-primary" id="mobileMenuBtn">
+        <i class="fas fa-bars text-xl"></i>
+      </button>
+    </div>
 
-  <!-- 输入区 -->
-  <div class="input-area">
-    <h2>📝 写下今天的心情/趣事</h2>
-    <textarea id="diaryInput" rows="4" placeholder="今天发生了什么？"></textarea><br>
-    <input type="file" id="imageInput" accept="image/*"><br>
-    <button onclick="addDiary()">发表</button>
+    <!-- 移动端导航菜单 -->
+    <div class="md:hidden hidden mt-3 pb-2 border-t border-gray-100" id="mobileMenu">
+      <a href="index.html" class="block py-2 text-gray-600 hover:text-primary px-4">
+        <i class="fas fa-home mr-1"></i> 首页
+      </a>
+      <a href="study.html" class="block py-2 text-gray-600 hover:text-primary px-4">
+        <i class="fas fa-book mr-1"></i> 学习碎片
+      </a>
+      <a href="#" class="block py-2 text-primary font-medium px-4">
+        <i class="fas fa-smile mr-1"></i> 生活分享
+      </a>
+      <a href="contact.html" class="block py-2 text-gray-600 hover:text-primary px-4">
+        <i class="fas fa-envelope mr-1"></i> 联系方式
+      </a>
+    </div>
+  </header>
+
+  <!-- 主内容区 -->
+  <main class="container mx-auto px-4 py-8 max-w-4xl">
+    <!-- 搜索 + 过滤栏 -->
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
+      <!-- 搜索框（移除问号，恢复搜索图标） -->
+      <div class="relative w-full md:w-1/2">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="搜索记录..."
+          class="w-full px-10 py-2.5 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all shadow-sm"
+        />
+        <i class="fas fa-search text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2"></i>
+        <button
+          id="searchBtn"
+          class="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1.5 bg-primary text-white rounded-full hover:bg-primary/90 transition-all text-sm font-medium"
+        >
+          <i class="fas fa-search mr-1"></i> 搜索
+        </button>
+      </div>
+
+      <!-- 过滤标签（自定义标签与其他标签并行） -->
+      <div class="flex flex-wrap gap-2">
+        <div class="filter-tag active" data-tag="all">全部</div>
+        <div class="filter-tag" data-tag="日常">日常</div>
+        <div class="filter-tag" data-tag="美食">美食</div>
+        <div class="filter-tag" data-tag="旅行">旅行</div>
+        <div class="filter-tag" data-tag="感悟">感悟</div>
+        <div class="filter-tag" data-tag="其他">其他</div>
+        <div class="filter-tag" data-tag="custom">自定义</div> <!-- 自定义标签筛选 -->
+      </div>
+    </div>
+
+    <!-- 发布表单 -->
+    <form class="bg-white rounded-xl shadow-card p-6 mb-8 transition-all hover:shadow-md">
+      <h2 class="text-xl font-semibold text-primary mb-5 flex items-center gap-2">
+        <i class="fas fa-pen"></i> 分享你的生活趣事
+      </h2>
+
+      <!-- 行1：昵称 + Emoji 选择 -->
+      <div class="space-y-5 mb-5">
+        <!-- 昵称 -->
+        <div class="w-full">
+          <label for="authorInput" class="block text-sm font-medium mb-1.5 text-gray-700">你的昵称（可选）</label>
+          <input
+            type="text"
+            id="authorInput"
+            placeholder="留空自动匿名"
+            class="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all shadow-sm"
+          />
+        </div>
+        <!-- Emoji 选择 -->
+        <div class="w-full">
+          <label class="block text-sm font-medium mb-1.5 text-gray-700">选择表情</label>
+          <div class="emoji-picker" id="emojiPicker"></div>
+          <div id="emojiPreview" class="mt-2.5 flex flex-wrap gap-1.5"></div>
+        </div>
+      </div>
+
+      <!-- 行2：标签选择 + 自定义标签 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+        <!-- 预设标签 -->
+        <div>
+          <label class="block text-sm font-medium mb-1.5 text-gray-700">选择标签</label>
+          <div class="tags-container flex flex-wrap gap-2">
+            <div class="tag" data-tag="日常">日常</div>
+            <div class="tag" data-tag="美食">美食</div>
+            <div class="tag" data-tag="旅行">旅行</div>
+            <div class="tag" data-tag="感悟">感悟</div>
+            <div class="tag" data-tag="其他">其他</div>
+          </div>
+        </div>
+        <!-- 自定义标签 -->
+        <div>
+          <label class="block text-sm font-medium mb-1.5 text-gray-700">自定义标签</label>
+          <div class="flex gap-2">
+            <input
+              type="text"
+              id="customTagInput"
+              placeholder="输入标签"
+              class="flex-1 px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all shadow-sm"
+            />
+            <button
+              type="button"
+              id="addCustomTag"
+              class="px-4 py-2.5 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-all font-medium"
+            >
+              <i class="fas fa-plus mr-1"></i> 添加
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 行3：地理位置 + 内容输入 -->
+      <div class="mb-5">
+        <label for="locationInput" class="block text-sm font-medium mb-1.5 text-gray-700">地理位置（可选）</label>
+        <input
+          type="text"
+          id="locationInput"
+          placeholder="例如：北京市朝阳区"
+          class="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all shadow-sm"
+        />
+      </div>
+      <div class="mb-5">
+        <label for="diaryInput" class="block text-sm font-medium mb-1.5 text-gray-700">今天发生了什么有趣的事？</label>
+        <textarea
+          id="diaryInput"
+          rows="5"
+          class="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-y transition-all shadow-sm"
+          placeholder="分享你的故事..."
+        ></textarea>
+      </div>
+
+      <!-- 行4：文件上传 + 操作按钮 -->
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4 pt-2 border-t border-gray-100">
+        <!-- 文件上传 -->
+        <div class="flex items-center gap-2">
+          <label
+            for="fileInput"
+            class="px-4 py-2.5 bg-gray-50 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 transition-all shadow-sm"
+          >
+            <i class="fas fa-upload mr-1"></i> 上传文件
+          </label>
+          <input type="file" id="fileInput" class="hidden" accept="*" />
+          <span class="text-sm text-gray-500 truncate max-w-xs" id="fileName">未选择文件</span>
+        </div>
+        <!-- 操作按钮 -->
+        <div class="flex gap-3">
+          <button
+            type="button"
+            id="cancelBtn"
+            class="px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-medium"
+          >
+            取消
+          </button>
+          <button
+            type="button"
+            id="submitBtn"
+            class="px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all font-medium"
+          >
+            <i class="fas fa-paper-plane mr-1"></i> 发表
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- 动态内容区 -->
+    <div id="diaryList" class="space-y-5 mb-8">
+      <!-- 空状态 -->
+      <div class="empty-state">
+        <i class="far fa-calendar-alt text-4xl mb-4 text-gray-300"></i>
+        <h3 class="text-lg font-medium mb-2">暂无记录</h3>
+        <p class="text-sm">成为第一个分享生活趣事的人吧！</p>
+      </div>
+    </div>
+
+    <!-- 分页控件 -->
+    <div id="pagination" class="flex items-center justify-center gap-2 mt-8 mb-4 hidden">
+      <button id="prevPage" class="page-btn" disabled>
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <div id="pageNumbers" class="flex items-center gap-1"></div>
+      <button id="nextPage" class="page-btn" disabled>
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </main>
+
+  <!-- 评论弹窗 -->
+  <div
+    id="commentModal"
+    class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4 backdrop-blur-sm"
+  >
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 max-h-[80vh] overflow-y-auto relative transform transition-all">
+      <button
+        id="closeModal"
+        class="absolute top-4 right-4 text-gray-500 hover:text-red-500 transition-colors"
+      >
+        <i class="fas fa-times text-xl"></i>
+      </button>
+      <h3 class="text-xl font-semibold text-primary mb-4">评论</h3>
+      <!-- 评论表单 -->
+      <form class="mb-6">
+        <input
+          type="text"
+          id="modalCommentAuthor"
+          placeholder="昵称（可选，留空自动匿名）"
+          class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary mb-3 shadow-sm"
+        />
+        <textarea
+          id="modalCommentContent"
+          rows="3"
+          class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary mb-3 shadow-sm"
+          placeholder="写下你的评论..."
+        ></textarea>
+        <input type="hidden" id="currentCommentId" value="" />
+        <button
+          type="button"
+          id="submitCommentBtn"
+          class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all font-medium"
+        >
+          <i class="fas fa-paper-plane mr-1"></i> 发表评论
+        </button>
+      </form>
+      <!-- 评论列表 -->
+      <div id="modalCommentsList" class="space-y-3"></div>
+    </div>
   </div>
 
-  <div id="diaryList"></div>
-
-  <!-- JavaScript 脚本 -->
   <script>
-    // 页面加载时加载历史记录
-    window.onload = function () {
-      const stored = localStorage.getItem("diaryData");
-      if (stored) {
-        document.getElementById("diaryList").innerHTML = stored;
-      }
+    // 全局变量
+    let diaryData = JSON.parse(localStorage.getItem('diaryData')) || [];
+    let currentEditingId = null;
+    let currentCommentId = null;
+    let selectedEmojis = [];
+    let selectedTags = [];
+    let customTags = JSON.parse(localStorage.getItem('customTags')) || [];
+    let currentPage = 1;
+    const PAGE_SIZE = 5;
+    let totalPages = 1;
+    let currentFilterTag = 'all';
+    let currentSearchKeyword = '';
+    const PRESET_TAGS = ['日常', '美食', '旅行', '感悟', '其他']; // 预设标签
+
+    // 常用表情列表
+    const COMMON_EMOJIS = [
+      "😊", "😂", "😍", "👍", "❤️", "🎉", "🤔", "😢", "😡", "👏",
+      "🙏", "😉", "😎", "🥳", "🤩", "😋", "🤤", "😱", "😴", "😌",
+      "🙌", "💯", "🔥", "✨", "🌟", "🎊", "🎁", "🎈", "🍕", "🍜",
+      "🍣", "🍺", "☕", "🎬", "🎵", "📚", "📸", "🚗", "✈️", "🏖️"
+    ];
+
+    // 页面加载初始化
+    window.onload = () => {
+      initEmojiPicker();
+      initEventListeners();
+      renderDiaryList();
+      updatePagination();
     };
 
-    function addDiary() {
-      const text = document.getElementById("diaryInput").value.trim();
-      const imageFile = document.getElementById("imageInput").files[0];
+    // 初始化Emoji选择器
+    function initEmojiPicker() {
+      const picker = document.getElementById("emojiPicker");
+      COMMON_EMOJIS.forEach(emoji => {
+        const div = document.createElement("div");
+        div.className = "emoji-item";
+        div.textContent = emoji;
+        div.onclick = () => addEmoji(emoji);
+        picker.appendChild(div);
+      });
+    }
 
-      if (!text && !imageFile) {
-        alert("请写点内容或上传图片！");
+    // 添加Emoji
+    function addEmoji(emoji) {
+      if (!selectedEmojis.includes(emoji)) {
+        selectedEmojis.push(emoji);
+        renderSelectedEmojis();
+      }
+    }
+
+    // 渲染已选Emoji
+    function renderSelectedEmojis() {
+      const preview = document.getElementById("emojiPreview");
+      preview.innerHTML = '';
+      selectedEmojis.forEach((emoji, index) => {
+        const div = document.createElement("div");
+        div.className = "selected-emoji";
+        div.innerHTML = `${emoji}<span class="remove-emoji" data-index="${index}">×</span>`;
+        preview.appendChild(div);
+      });
+      document.querySelectorAll('.remove-emoji').forEach(btn => {
+        btn.onclick = (e) => {
+          selectedEmojis.splice(parseInt(e.target.dataset.index), 1);
+          renderSelectedEmojis();
+        };
+      });
+    }
+
+    // 初始化事件监听
+    function initEventListeners() {
+      // 提交日记
+      document.getElementById("submitBtn").onclick = addOrUpdateDiary;
+      
+      // 取消
+      document.getElementById("cancelBtn").onclick = resetForm;
+      
+      // 文件上传
+      document.getElementById("fileInput").onchange = (e) => {
+        document.getElementById("fileName").textContent = e.target.files[0]?.name || "未选择文件";
+      };
+      
+      // 标签选择
+      document.querySelectorAll('.tag').forEach(tag => {
+        tag.onclick = () => toggleTag(tag);
+      });
+      
+      // 添加自定义标签
+      document.getElementById("addCustomTag").onclick = addCustomTag;
+      
+      // 过滤标签点击
+      document.querySelectorAll('.filter-tag').forEach(tag => {
+        tag.onclick = () => {
+          document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+          tag.classList.add('active');
+          currentFilterTag = tag.dataset.tag;
+          currentPage = 1;
+          renderDiaryList();
+          updatePagination();
+        };
+      });
+      
+      // 评论弹窗关闭
+      document.getElementById("closeModal").onclick = () => {
+        document.getElementById("commentModal").classList.add('hidden');
+        resetCommentForm();
+      };
+      
+      // 提交评论
+      document.getElementById("submitCommentBtn").onclick = submitComment;
+      
+      // 搜索按钮
+      document.getElementById("searchBtn").onclick = triggerSearch;
+      
+      // 移动端菜单切换
+      document.getElementById("mobileMenuBtn").onclick = () => {
+        document.getElementById("mobileMenu").classList.toggle('hidden');
+      };
+      
+      // 分页按钮事件
+      document.getElementById("prevPage").onclick = () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderDiaryList();
+          updatePagination();
+          scrollToTop();
+        }
+      };
+      
+      document.getElementById("nextPage").onclick = () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderDiaryList();
+          updatePagination();
+          scrollToTop();
+        }
+      };
+    }
+
+    // 触发搜索
+    function triggerSearch() {
+      currentSearchKeyword = document.getElementById("searchInput").value.toLowerCase();
+      currentPage = 1;
+      renderDiaryList();
+      updatePagination();
+    }
+
+    // 切换标签选择
+    function toggleTag(tagElement) {
+      const tag = tagElement.dataset.tag;
+      const index = selectedTags.indexOf(tag);
+      
+      if (index === -1) {
+        selectedTags.push(tag);
+        tagElement.classList.add('active');
+      } else {
+        selectedTags.splice(index, 1);
+        tagElement.classList.remove('active');
+      }
+    }
+
+    // 添加自定义标签
+    function addCustomTag() {
+      const input = document.getElementById("customTagInput");
+      const tag = input.value.trim();
+      
+      if (tag && !selectedTags.includes(tag) && !COMMON_EMOJIS.includes(tag)) {
+        selectedTags.push(tag);
+        customTags.push(tag);
+        localStorage.setItem('customTags', JSON.stringify(customTags));
+        
+        // 添加到标签容器
+        const container = document.querySelector('.tags-container');
+        const div = document.createElement("div");
+        div.className = "tag active";
+        div.dataset.tag = tag;
+        div.textContent = tag;
+        div.onclick = () => toggleTag(div);
+        container.appendChild(div);
+        input.value = '';
+      }
+    }
+
+    // 提交/更新日记
+    function addOrUpdateDiary() {
+      const author = document.getElementById("authorInput").value.trim() || '匿名用户';
+      const content = document.getElementById("diaryInput").value.trim();
+      const location = document.getElementById("locationInput").value.trim();
+      const fileInput = document.getElementById("fileInput");
+      let fileInfo = null;
+
+      if (!content) return alert('请分享你的故事');
+      if (!selectedTags.length) return alert('请至少选择一个标签');
+
+      // 处理文件
+      if (fileInput.files[0]) {
+        const file = fileInput.files[0];
+        fileInfo = {
+          name: file.name,
+          url: URL.createObjectURL(file),
+          type: file.type.split('/')[0]
+        };
+      }
+
+      if (currentEditingId) {
+        // 更新现有日记
+        const index = diaryData.findIndex(item => item.id === currentEditingId);
+        diaryData[index] = {
+          ...diaryData[index],
+          author,
+          content,
+          location,
+          fileInfo,
+          emojis: selectedEmojis,
+          tags: selectedTags,
+          updateTime: new Date().toISOString()
+        };
+      } else {
+        // 添加新日记
+        diaryData.unshift({
+          id: Date.now().toString(),
+          author,
+          content,
+          location,
+          fileInfo,
+          emojis: selectedEmojis,
+          tags: selectedTags,
+          createTime: new Date().toISOString(),
+          comments: []
+        });
+      }
+
+      // 保存自定义标签
+      const newCustomTags = selectedTags.filter(tag => !PRESET_TAGS.includes(tag));
+      customTags = [...new Set([...customTags, ...newCustomTags])];
+      localStorage.setItem('customTags', JSON.stringify(customTags));
+
+      // 保存并刷新
+      saveDiaryData();
+      renderDiaryList();
+      updatePagination();
+      resetForm();
+    }
+
+    // 重置表单
+    function resetForm() {
+      document.getElementById("authorInput").value = '';
+      document.getElementById("diaryInput").value = '';
+      document.getElementById("locationInput").value = '';
+      document.getElementById("fileInput").value = '';
+      document.getElementById("fileName").textContent = '未选择文件';
+      selectedEmojis = [];
+      selectedTags = [];
+      renderSelectedEmojis();
+      document.querySelectorAll('.tag.active').forEach(tag => {
+        tag.classList.remove('active');
+      });
+      currentEditingId = null;
+    }
+
+    // 重置评论表单
+    function resetCommentForm() {
+      document.getElementById("modalCommentAuthor").value = '';
+      document.getElementById("modalCommentContent").value = '';
+      document.getElementById("currentCommentId").value = '';
+      currentCommentId = null;
+    }
+
+    // 提交评论
+    function submitComment() {
+      const postId = document.getElementById("commentModal").dataset.postId;
+      const author = document.getElementById("modalCommentAuthor").value.trim() || '匿名用户';
+      const content = document.getElementById("modalCommentContent").value.trim();
+      const commentId = document.getElementById("currentCommentId").value;
+      
+      if (!content) return alert('请填写评论内容');
+
+      const postIndex = diaryData.findIndex(item => item.id === postId);
+      if (postIndex === -1) return;
+
+      if (commentId) {
+        // 编辑现有评论
+        const commentIndex = diaryData[postIndex].comments.findIndex(c => c.id === commentId);
+        if (commentIndex !== -1) {
+          diaryData[postIndex].comments[commentIndex] = {
+            ...diaryData[postIndex].comments[commentIndex],
+            author,
+            content,
+            time: new Date().toISOString()
+          };
+        }
+      } else {
+        // 添加新评论
+        diaryData[postIndex].comments.push({
+          id: Date.now().toString(),
+          author,
+          content,
+          time: new Date().toISOString()
+        });
+      }
+
+      saveDiaryData();
+      renderComments(postId);
+      renderDiaryList();
+      resetCommentForm();
+    }
+
+    // 编辑评论
+    function editComment(postId, commentId) {
+      const postIndex = diaryData.findIndex(item => item.id === postId);
+      if (postIndex === -1) return;
+      
+      const comment = diaryData[postIndex].comments.find(c => c.id === commentId);
+      if (!comment) return;
+
+      document.getElementById("modalCommentAuthor").value = comment.author;
+      document.getElementById("modalCommentContent").value = comment.content;
+      document.getElementById("currentCommentId").value = commentId;
+      currentCommentId = commentId;
+    }
+
+    // 删除评论
+    function deleteComment(postId, commentId) {
+      if (!confirm('确定要删除这条评论吗？')) return;
+
+      const postIndex = diaryData.findIndex(item => item.id === postId);
+      if (postIndex === -1) return;
+
+      diaryData[postIndex].comments = diaryData[postIndex].comments.filter(
+        c => c.id !== commentId
+      );
+
+      saveDiaryData();
+      renderComments(postId);
+      renderDiaryList();
+      resetCommentForm();
+    }
+
+    // 渲染评论
+    function renderComments(postId) {
+      const post = diaryData.find(item => item.id === postId);
+      const container = document.getElementById("modalCommentsList");
+      container.innerHTML = '';
+      
+      if (!post?.comments?.length) {
+        container.innerHTML = '<p class="text-center text-gray-500 text-sm py-3">暂无评论，快来抢沙发～</p>';
         return;
       }
 
-      const reader = new FileReader();
-
-      reader.onload = function () {
-        const imageURL = imageFile ? `<img src="${reader.result}">` : "";
-        const now = new Date().toLocaleString();
-        const entry = `
-          <div class="post">
-            <button class="delete-btn" title="删除"><i class="fas fa-trash-alt"></i></button>
-            <p>${text}</p>
-            ${imageURL}
-            <div class="time">${now}</div>
+      post.comments.forEach(comment => {
+        const div = document.createElement("div");
+        div.className = "p-3 bg-gray-50 rounded-lg";
+        div.innerHTML = `
+          <div class="flex justify-between items-start mb-1">
+            <span class="font-medium text-primary">${comment.author}</span>
+            <span class="text-xs text-gray-500">${formatTime(comment.time)}</span>
+          </div>
+          <p class="text-sm">${comment.content}</p>
+          <div class="comment-actions">
+            <button onclick="editComment('${postId}', '${comment.id}')">
+              <i class="fas fa-edit text-xs mr-1"></i>编辑
+            </button>
+            <button onclick="deleteComment('${postId}', '${comment.id}')">
+              <i class="fas fa-trash text-xs mr-1"></i>删除
+            </button>
           </div>
         `;
-
-        const list = document.getElementById("diaryList");
-        list.insertAdjacentHTML("afterbegin", entry);
-
-        saveData();
-        document.getElementById("diaryInput").value = "";
-        document.getElementById("imageInput").value = "";
-      };
-
-      if (imageFile) {
-        reader.readAsDataURL(imageFile);
-      } else {
-        reader.onload();
-      }
+        container.appendChild(div);
+      });
     }
 
-    // ✅ 删除功能（使用事件委托）
-    document.addEventListener("click", function (e) {
-      if (e.target.closest(".delete-btn")) {
-        const post = e.target.closest(".post");
-        if (post) {
-          post.remove();
-          saveData();
+    // 渲染日记列表（带分页）
+    function renderDiaryList() {
+      const container = document.getElementById("diaryList");
+      let filteredData = [...diaryData];
+
+      // 标签过滤（含自定义标签筛选逻辑）
+      if (currentFilterTag !== 'all') {
+        if (currentFilterTag === 'custom') {
+          // 筛选包含自定义标签的内容（非预设标签）
+          filteredData = filteredData.filter(item => 
+            item.tags.some(tag => !PRESET_TAGS.includes(tag))
+          );
+        } else {
+          // 常规标签筛选
+          filteredData = filteredData.filter(item => 
+            item.tags.includes(currentFilterTag)
+          );
         }
       }
-    });
 
-    // 保存到本地
-    function saveData() {
-      const content = document.getElementById("diaryList").innerHTML;
-      localStorage.setItem("diaryData", content);
+      // 搜索过滤
+      if (currentSearchKeyword) {
+        filteredData = filteredData.filter(item => 
+          item.author.toLowerCase().includes(currentSearchKeyword) || 
+          item.content.toLowerCase().includes(currentSearchKeyword) ||
+          item.tags.some(tag => tag.toLowerCase().includes(currentSearchKeyword))
+        );
+      }
+
+      // 分页处理
+      totalPages = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE));
+      const startIndex = (currentPage - 1) * PAGE_SIZE;
+      const paginatedData = filteredData.slice(startIndex, startIndex + PAGE_SIZE);
+
+      // 空状态处理
+      if (paginatedData.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="far fa-calendar-alt text-4xl mb-4 text-gray-300"></i>
+            <h3 class="text-lg font-medium mb-2">暂无记录</h3>
+            <p class="text-sm">${currentFilterTag !== 'all' ? '该标签下暂无内容' : '成为第一个分享的人吧'}</p>
+          </div>
+        `;
+        document.getElementById("pagination").classList.add('hidden');
+        return;
+      }
+
+      // 显示分页控件
+      document.getElementById("pagination").classList.remove('hidden');
+
+      // 渲染日记卡片
+      container.innerHTML = '';
+      paginatedData.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "diary-card";
+        
+        // 文件预览内容
+        let filePreview = '';
+        if (item.fileInfo) {
+          if (item.fileInfo.type === 'image') {
+            filePreview = `
+              <div class="mb-3 rounded-lg overflow-hidden">
+                <img src="${item.fileInfo.url}" alt="${item.fileInfo.name}" class="w-full h-48 object-cover transition-transform duration-500 hover:scale-105">
+                <p class="text-xs text-gray-500 mt-1">${item.fileInfo.name}</p>
+              </div>
+            `;
+          } else {
+            filePreview = `
+              <div class="file-preview">
+                <div class="file-icon">
+                  <i class="fas fa-file-${item.fileInfo.type === 'pdf' ? 'pdf' : 'alt'}"></i>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm truncate">${item.fileInfo.name}</p>
+                  <a href="${item.fileInfo.url}" target="_blank" class="text-xs text-primary hover:underline">下载文件</a>
+                </div>
+              </div>
+            `;
+          }
+        }
+
+        card.innerHTML = `
+          <div class="flex justify-between items-start mb-3">
+            <div class="flex items-center gap-2">
+              <span class="font-medium text-primary">${item.author}</span>
+              <div class="flex gap-1">${item.emojis.join('')}</div>
+            </div>
+            <span class="text-xs text-gray-500">${formatTime(item.createTime)}</span>
+          </div>
+          
+          ${item.location ? `<div class="text-sm text-gray-600 mb-3 flex items-center">
+            <i class="fas fa-map-marker-alt text-gray-400 mr-1"></i> ${item.location}
+          </div>` : ''}
+          
+          <p class="text-gray-800 mb-3 text-balance">${item.content}</p>
+          
+          ${filePreview}
+          
+          <div class="flex flex-wrap gap-2 mb-3">
+            ${item.tags.map(tag => `<span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">${tag}</span>`).join('')}
+          </div>
+          
+          <div class="flex gap-4 text-sm text-gray-500">
+            <button class="flex items-center gap-1 hover:text-primary transition-colors" onclick="openCommentModal('${item.id}')">
+              <i class="fas fa-comment"></i> 评论(${item.comments?.length || 0})
+            </button>
+            <button class="flex items-center gap-1 hover:text-primary transition-colors" onclick="editDiary('${item.id}')">
+              <i class="fas fa-edit"></i> 编辑
+            </button>
+            <button class="flex items-center gap-1 hover:text-red-500 transition-colors" onclick="deleteDiary('${item.id}')">
+              <i class="fas fa-trash"></i> 删除
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // 更新分页按钮 - 优化版
+function updatePagination() {
+  const totalPages = Math.ceil(filteredCards.length / itemsPerPage);
+  const paginationContainer = document.getElementById('pagination');
+  
+  // 清空现有页码按钮（保留前后按钮）
+  const pageButtons = paginationContainer.querySelectorAll('.pagination-btn:not([data-page="prev"]):not([data-page="next"])');
+  pageButtons.forEach(btn => btn.remove());
+  
+  // 添加页码按钮（只在有数据时添加）
+  if (totalPages > 0) {
+    const prevButton = paginationContainer.querySelector('[data-page="prev"]');
+    for (let i = 1; i <= totalPages; i++) {
+      const button = document.createElement('button');
+      button.className = `pagination-btn px-4 py-2 rounded-lg border border-gray-300 transition-colors ${i === currentPage ? 'bg-primary text-white' : 'hover:bg-gray-100'}`;
+      button.setAttribute('data-page', i);
+      button.textContent = i;
+      
+      button.addEventListener('click', function() {
+        const page = parseInt(this.getAttribute('data-page'));
+        renderPage(page);
+      });
+      
+      prevButton.after(button);
+    }
+  }
+  
+  // 禁用/启用前后按钮
+  const prevBtn = paginationContainer.querySelector('[data-page="prev"]');
+  const nextBtn = paginationContainer.querySelector('[data-page="next"]');
+  
+  prevBtn.disabled = currentPage === 1 || totalPages === 0;
+  prevBtn.classList.toggle('opacity-50', currentPage === 1 || totalPages === 0);
+  prevBtn.classList.toggle('cursor-not-allowed', currentPage === 1 || totalPages === 0);
+  
+  nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+  nextBtn.classList.toggle('opacity-50', currentPage === totalPages || totalPages === 0);
+  nextBtn.classList.toggle('cursor-not-allowed', currentPage === totalPages || totalPages === 0);
+  
+  // 显示/隐藏空状态和分页控件
+  const emptyState = document.getElementById('empty-state');
+  if (filteredCards.length === 0) {
+    emptyState.classList.remove('hidden');
+    paginationContainer.classList.add('hidden');
+  } else {
+    emptyState.classList.add('hidden');
+    paginationContainer.classList.remove('hidden');
+  }
+}
+
+    // 滚动到顶部
+    function scrollToTop() {
+      window.scrollTo({
+        top: document.getElementById("diaryList").offsetTop - 20,
+        behavior: 'smooth'
+      });
+    }
+
+    // 打开评论弹窗
+    function openCommentModal(postId) {
+      const modal = document.getElementById("commentModal");
+      modal.dataset.postId = postId;
+      renderComments(postId);
+      modal.classList.remove('hidden');
+      resetCommentForm();
+    }
+
+    // 编辑日记
+    function editDiary(id) {
+      const item = diaryData.find(item => item.id === id);
+      if (!item) return;
+      
+      currentEditingId = id;
+      document.getElementById("authorInput").value = item.author;
+      document.getElementById("diaryInput").value = item.content;
+      document.getElementById("locationInput").value = item.location || '';
+      selectedEmojis = [...item.emojis];
+      selectedTags = [...item.tags];
+      
+      renderSelectedEmojis();
+      
+      // 激活标签
+      document.querySelectorAll('.tag').forEach(tag => {
+        if (selectedTags.includes(tag.dataset.tag)) {
+          tag.classList.add('active');
+        } else {
+          tag.classList.remove('active');
+        }
+      });
+
+      document.querySelector('form').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 删除日记
+    function deleteDiary(id) {
+      if (confirm('确定要删除这条记录吗？')) {
+        diaryData = diaryData.filter(item => item.id !== id);
+        saveDiaryData();
+        renderDiaryList();
+        updatePagination();
+      }
+    }
+
+    // 保存数据到本地存储
+    function saveDiaryData() {
+      localStorage.setItem('diaryData', JSON.stringify(diaryData));
+    }
+
+    // 格式化时间
+    function formatTime(isoTime) {
+      const date = new Date(isoTime);
+      return date.toLocaleString('zh-CN', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     }
   </script>
-
 </body>
 </html>

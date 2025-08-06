@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录管理后台</title>
+    <!-- 引入外部资源 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- Tailwind配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        accent: '#8B5CF6',
+                        danger: '#EF4444',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+            }
+            .btn-primary {
+                @apply bg-primary text-white px-4 py-3 rounded-lg hover:bg-primary/90 transition-all font-medium;
+            }
+            .btn-outline {
+                @apply border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-50 transition-all font-medium;
+            }
+            .input-field {
+                @apply w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all;
+            }
+            .form-label {
+                @apply block text-sm font-medium text-gray-700 mb-1;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center p-4 font-sans">
+    <div class="w-full max-w-md">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 transform transition-all duration-500 hover:shadow-xl">
+            <div class="p-6 sm:p-8">
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+                        <i class="fa fa-shield text-2xl text-primary"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-dark mb-1">管理后台登录</h2>
+                    <p class="text-gray-500 text-sm">请输入您的账号和密码</p>
+                </div>
+
+                <form id="loginForm" class="space-y-5">
+                    <div>
+                        <label for="email" class="form-label">邮箱</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                                <i class="fa fa-envelope"></i>
+                            </span>
+                            <input type="email" id="email" name="email" class="input-field pl-10" placeholder="请输入邮箱" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="password" class="form-label">密码</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                                <i class="fa fa-lock"></i>
+                            </span>
+                            <input type="password" id="password" name="password" class="input-field pl-10" placeholder="请输入密码" required>
+                            <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-primary transition-colors">
+                                <i class="fa fa-eye-slash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input id="remember" name="remember" type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                            <label for="remember" class="ml-2 block text-sm text-gray-700">记住我</label>
+                        </div>
+                        <a href="#" class="text-sm text-primary hover:underline">忘记密码?</a>
+                    </div>
+
+                    <div>
+                        <button type="submit" id="loginBtn" class="btn-primary w-full flex items-center justify-center">
+                            <i class="fa fa-sign-in mr-2"></i> 登录
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-6 pt-6 border-t border-gray-100 text-center">
+                    <p class="text-sm text-gray-500">
+                        还没有账号? <a href="register.html" class="text-primary hover:underline font-medium">立即注册</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 text-center text-sm text-gray-500">
+            <p>&copy; 2023 Three King 个人网站. 保留所有权利.</p>
+        </div>
+    </div>
+
+    <!-- 错误提示模态框 -->
+    <div id="errorModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
+            <div class="text-center mb-4">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mb-3">
+                    <i class="fa fa-exclamation-triangle text-xl text-red-500"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900" id="errorTitle">登录失败</h3>
+            </div>
+            <p class="text-gray-600 mb-5 text-center" id="errorMessage">用户名或密码错误</p>
+            <div class="text-center">
+                <button id="closeModalBtn" class="btn-primary px-6 py-2 rounded-lg hover:bg-primary/90 transition-all">
+                    确定
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 密码显示/隐藏切换
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+
+        if (togglePassword && passwordInput) {
+            togglePassword.addEventListener('click', () => {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                togglePassword.querySelector('i').classList.toggle('fa-eye');
+                togglePassword.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+        }
+
+        // 错误模态框控制
+        const errorModal = document.getElementById('errorModal');
+        const modalContent = document.getElementById('modalContent');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const errorTitle = document.getElementById('errorTitle');
+        const errorMessage = document.getElementById('errorMessage');
+
+        function showErrorModal(title, message) {
+            if (errorTitle) errorTitle.textContent = title || '操作失败';
+            if (errorMessage) errorMessage.textContent = message || '发生未知错误';
+
+            if (errorModal && modalContent) {
+                errorModal.classList.remove('hidden');
+                // 添加动画
+                setTimeout(() => {
+                    modalContent.classList.remove('scale-95', 'opacity-0');
+                    modalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            }
+        }
+
+        function closeErrorModal() {
+            if (errorModal && modalContent) {
+                modalContent.classList.remove('scale-100', 'opacity-100');
+                modalContent.classList.add('scale-95', 'opacity-0');
+                // 延迟隐藏
+                setTimeout(() => {
+                    errorModal.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', closeErrorModal);
+        }
+
+        // 点击模态框外部关闭
+        if (errorModal) {
+            errorModal.addEventListener('click', (e) => {
+                if (e.target === errorModal) {
+                    closeErrorModal();
+                }
+            });
+        }
+
+        // 登录表单提交
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+
+        if (loginForm && loginBtn) {
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value.trim();
+                const remember = document.getElementById('remember').checked;
+
+                // 简单验证
+                if (!email || !password) {
+                    showErrorModal('输入错误', '请输入邮箱和密码');
+                    return;
+                }
+
+                // 禁用按钮，防止重复提交
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 登录中...';
+
+                try {
+                    // 发送登录请求
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email, password })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.message || '登录失败，请检查邮箱和密码');
+                    }
+
+                    // 保存token
+                    localStorage.setItem('token', data.token);
+
+                    // 如果勾选记住我，可以设置更长的过期时间（示例）
+                    if (remember) {
+                        // 这里可以实现记住我功能，例如设置cookie
+                    }
+
+                    // 登录成功，重定向到管理后台
+                    window.location.href = 'admin.html';
+                } catch (error) {
+                    console.error('登录错误:', error);
+                    showErrorModal('登录失败', error.message);
+                } finally {
+                    // 恢复按钮状态
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="fa fa-sign-in mr-2"></i> 登录';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

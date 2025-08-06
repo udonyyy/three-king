@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>英语单词 - Three KING</title>
+  <link rel="icon" href="atm.jpg" type="image/png/jpg">
+  <!-- 外部资源 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#4F46E5',
+            secondary: '#10B981',
+            accent: '#F59E0B',
+            danger: '#EF4444',
+            neutral: '#64748B'
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto { content-visibility: auto; }
+      .card-hover { transition: all 0.3s ease; }
+      .card-hover:hover { transform: translateY(-3px); }
+      .word-reveal { animation: reveal 0.5s ease-out; }
+      .btn-effect { transition: all 0.2s ease; }
+      .btn-effect:active { transform: scale(0.96); }
+      .action-btn { transition: all 0.15s ease; }
+      .action-btn:active { transform: scale(0.9); }
+    }
+  </style>
+  
+  <style>
+    @keyframes reveal {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+  <div class="max-w-2xl mx-auto px-4 py-8">
+    
+    <!-- 头部 -->
+    <header class="mb-8 text-center">
+        <div class="text-left mb-4">
+        <a href="index.html" class="text-primary hover:text-primary/80 font-medium flex items-center">
+          <i class="fa fa-chevron-left mr-1"></i> Three King
+        </a>
+      </div>
+
+      <div class="flex items-center justify-center space-x-2 mb-4">
+        <i class="fa fa-book text-primary text-2xl"></i>
+        <h1 class="text-[clamp(1.8rem,5vw,2.5rem)] font-bold text-gray-800">WordMaster</h1>
+      </div>
+      <p class="text-gray-600 mb-6">按词库分类学习英语单词</p>
+      
+      <!-- 词库选择下拉框 -->
+      <div class="mb-6">
+        <label class="block text-gray-700 mb-2 text-left">选择词库：</label>
+        <select id="dictSelect" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+          <option value="cet6">六级</option>
+          <option value="kaoyan">考研</option>
+          <option value="ielts">雅思</option>
+          <option value="toefl">托福</option>
+        </select>
+      </div>
+    </header>
+
+    <!-- 单词卡片 -->
+    <section id="card" class="bg-white rounded-xl shadow-md p-6 mb-8 card-hover">
+      <!-- 加载状态 -->
+      <div id="loading" class="py-12 text-center text-gray-500">
+        <i class="fa fa-spinner fa-spin text-xl mb-2"></i>
+        <p>加载单词数据中...</p>
+      </div>
+      
+      <!-- 单词内容 -->
+      <div id="word-content" class="hidden">
+        <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+          <div>
+            <h2 id="word" class="text-3xl font-bold text-gray-800 word-reveal"></h2>
+            <p id="phonetic" class="text-neutral italic mt-1"></p>
+          </div>
+          <button id="speak" class="bg-primary/10 hover:bg-primary/20 text-primary p-3 rounded-full btn-effect">
+            <i class="fa fa-volume-up"></i>
+          </button>
+        </div>
+        
+        <div class="mb-6">
+          <h3 class="text-sm font-semibold text-gray-500 mb-1">中文释义</h3>
+          <p id="cn-meaning" class="text-gray-700 text-lg"></p>
+        </div>
+        
+        <div class="flex gap-3">
+          <button id="next" class="flex-1 bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg font-medium btn-effect">
+            <i class="fa fa-refresh mr-2"></i>下一个单词
+          </button>
+          <button id="star" class="bg-gray-100 hover:bg-gray-200 text-accent p-3 rounded-lg btn-effect">
+            <i class="fa fa-star-o text-xl"></i>
+          </button>
+          <button id="delete" class="bg-gray-100 hover:bg-danger/10 text-danger p-3 rounded-lg btn-effect">
+            <i class="fa fa-trash-o text-xl"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 标签页导航 -->
+    <nav class="mb-4 border-b border-gray-200">
+      <div class="flex -mb-px flex-wrap">
+        <button data-tab="fav" class="tab-btn py-3 px-5 text-primary border-b-2 border-primary font-medium">
+          <i class="fa fa-heart mr-1"></i>收藏
+        </button>
+        <button data-tab="hist" class="tab-btn py-3 px-5 text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300">
+          <i class="fa fa-history mr-1"></i>历史
+        </button>
+        <button data-tab="deleted" class="tab-btn py-3 px-5 text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300">
+          <i class="fa fa-trash mr-1"></i>已删除
+        </button>
+      </div>
+    </nav>
+    
+    <!-- 列表区域 -->
+    <div id="list-container" class="bg-white rounded-xl shadow-sm p-4 max-h-60 overflow-y-auto">
+      <ul id="list" class="divide-y divide-gray-100">
+        <!-- 动态生成列表项 -->
+      </ul>
+    </div>
+    
+    <!-- 底部信息 -->
+    <footer class="mt-8 text-center text-gray-500 text-sm">
+      <p>无限进步！(๑•̀ㅂ•́)و✧</p>
+    </footer>
+  </div>
+
+  <!-- 通知提示 -->
+  <div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none">
+    <span id="toast-message"></span>
+  </div>
+
+  <!-- 确认操作对话框 -->
+  <div id="confirmDialog" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300">
+      <h3 class="text-xl font-bold text-gray-800 mb-2" id="dialogTitle">确认操作</h3>
+      <p class="text-gray-600 mb-4">
+        <span id="dialogMessage"></span>
+        <span id="operateWordPreview" class="font-medium"></span>
+      </p>
+      <div class="flex gap-3">
+        <button id="cancelOperate" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-4 rounded-lg font-medium btn-effect">
+          取消
+        </button>
+        <button id="confirmOperate" class="flex-1 bg-danger hover:bg-danger/90 text-white py-2 px-4 rounded-lg font-medium btn-effect">
+          确认
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // 应用状态
+    let words = [];
+    let currentWord = null;
+    const dictSelect = document.getElementById('dictSelect');
+
+    // 本地存储工具 - 按词库分类
+    const LS = {
+      get(k) { 
+        try {
+          return JSON.parse(localStorage.getItem(k) || '[]');
+        } catch (e) {
+          console.error('解析失败', k, e);
+          return [];
+        }
+      },
+      set(k, v) { 
+        try {
+          localStorage.setItem(k, JSON.stringify(v));
+        } catch (e) {
+          console.error('保存失败', k, e);
+          showToast('存储失败，请稍后再试');
+        }
+      }
+    };
+
+    // 生成带词库前缀的存储键名
+    function storageKey(base) {
+      return `${dictSelect.value}_${base}`;
+    }
+
+    // 显示提示消息
+    function showToast(message, duration = 2000) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      
+      toastMessage.textContent = message;
+      toast.classList.remove('opacity-0');
+      toast.classList.add('opacity-100');
+      
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+      }, duration);
+    }
+
+    // 显示确认对话框
+    function showConfirmDialog(title, message, word, onConfirm) {
+      const dialog = document.getElementById('confirmDialog');
+      document.getElementById('dialogTitle').textContent = title;
+      document.getElementById('dialogMessage').textContent = message;
+      document.getElementById('operateWordPreview').textContent = word;
+      
+      // 显示对话框
+      dialog.classList.remove('opacity-0', 'pointer-events-none');
+      dialog.querySelector('div').classList.remove('scale-95');
+      dialog.querySelector('div').classList.add('scale-100');
+      
+      // 绑定确认和取消事件
+      const confirmBtn = document.getElementById('confirmOperate');
+      const cancelBtn = document.getElementById('cancelOperate');
+      
+      const handleCancel = () => {
+        hideConfirmDialog();
+        cancelBtn.removeEventListener('click', handleCancel);
+        confirmBtn.removeEventListener('click', handleConfirm);
+      };
+      
+      const handleConfirm = () => {
+        onConfirm();
+        hideConfirmDialog();
+        cancelBtn.removeEventListener('click', handleCancel);
+        confirmBtn.removeEventListener('click', handleConfirm);
+      };
+      
+      cancelBtn.addEventListener('click', handleCancel);
+      confirmBtn.addEventListener('click', handleConfirm);
+    }
+
+    // 隐藏确认对话框
+    function hideConfirmDialog() {
+      const dialog = document.getElementById('confirmDialog');
+      dialog.classList.add('opacity-0', 'pointer-events-none');
+      dialog.querySelector('div').classList.remove('scale-100');
+      dialog.querySelector('div').classList.add('scale-95');
+    }
+
+    // 取消收藏（从收藏列表中）
+    function unstarWord(word) {
+      if (!word) return;
+      
+      const favorites = LS.get(storageKey('favorites'));
+      const index = favorites.indexOf(word);
+      
+      if (index > -1) {
+        favorites.splice(index, 1);
+        LS.set(storageKey('favorites'), favorites);
+        showToast(`已取消收藏: ${word}`);
+        
+        // 更新当前单词卡片的收藏状态（如果正在查看该单词）
+        if (currentWord && currentWord.word === word) {
+          document.getElementById('star').querySelector('i').className = 'fa fa-star-o text-xl';
+        }
+        
+        // 更新收藏列表
+        showTab('fav');
+      }
+    }
+
+    // 删除单词
+    function deleteWord(word) {
+      if (!word) return;
+      
+      // 获取已删除单词列表
+      const deletedWords = LS.get(storageKey('deleted'));
+      
+      // 如果单词已删除，直接返回
+      if (deletedWords.includes(word.word || word)) {
+        showToast('该单词已删除');
+        return;
+      }
+      
+      // 标准化为单词字符串
+      const wordStr = word.word || word;
+      
+      // 添加到已删除列表
+      deletedWords.push(wordStr);
+      LS.set(storageKey('deleted'), deletedWords);
+      
+      // 从当前单词列表中移除
+      words = words.filter(w => w.word !== wordStr);
+      
+      showToast(`已删除单词: ${wordStr}`);
+      
+      // 如果当前正在查看该单词，显示下一个单词
+      if (currentWord && currentWord.word === wordStr) {
+        renderWordCard(pickRandomWord());
+      }
+      
+      // 如果当前显示的是已删除标签页，更新列表
+      const activeTab = document.querySelector('.tab-btn.text-primary');
+      if (activeTab && activeTab.dataset.tab === 'deleted') {
+        showTab('deleted');
+      }
+      
+      // 如果该单词在收藏列表中，同时从收藏中移除
+      const favorites = LS.get(storageKey('favorites'));
+      const favIndex = favorites.indexOf(wordStr);
+      if (favIndex > -1) {
+        favorites.splice(favIndex, 1);
+        LS.set(storageKey('favorites'), favorites);
+        
+        // 如果当前显示的是收藏标签页，更新列表
+        if (activeTab && activeTab.dataset.tab === 'fav') {
+          showTab('fav');
+        }
+      }
+    }
+
+    // 恢复已删除单词
+    function restoreDeletedWord(word) {
+      if (!word) return;
+      
+      // 获取已删除单词列表
+      let deletedWords = LS.get(storageKey('deleted'));
+      
+      // 从已删除列表中移除
+      deletedWords = deletedWords.filter(w => w !== word);
+      LS.set(storageKey('deleted'), deletedWords);
+      
+      showToast(`已恢复单词: ${word}`);
+      
+      // 重新加载词库以包含恢复的单词
+      loadDict(dictSelect.value);
+      
+      // 如果当前显示的是已删除标签页，更新列表
+      const activeTab = document.querySelector('.tab-btn.text-primary');
+      if (activeTab && activeTab.dataset.tab === 'deleted') {
+        showTab('deleted');
+      }
+    }
+
+    // 加载指定词库
+    async function loadDict(name) {
+      try {
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('word-content').classList.add('hidden');
+        
+        const response = await fetch(`./dicts/${name}.json`);
+        if (!response.ok) throw new Error(`加载${getDictName(name)}词库失败`);
+        
+        let allWords = await response.json();
+        
+        // 过滤已删除的单词
+        const deletedWords = LS.get(storageKey('deleted'));
+        words = allWords.filter(word => !deletedWords.includes(word.word));
+        
+        renderWordCard(pickRandomWord());
+        showTab(document.querySelector('.tab-btn.text-primary')?.dataset.tab || 'fav');
+        showToast(`已加载${getDictName(name)}词库（已过滤 ${allWords.length - words.length} 个已删除单词）`);
+      } catch (error) {
+        console.error('加载词库出错:', error);
+        document.getElementById('loading').innerHTML = `
+          <i class="fa fa-exclamation-triangle text-accent text-xl mb-2"></i>
+          <p>${error.message}</p>
+          <p class="mt-2 text-sm">请检查dicts文件夹是否存在对应词库文件</p>
+        `;
+        
+        // 备用数据
+        words = [
+          {
+            "word": "example",
+            "phonetic": "/ɪɡˈzɑːmpl/",
+            "cn": "例子，实例",
+            "audio": "https://ssl.gstatic.com/dictionary/static/sounds/20200429/example--_gb_1.mp3"
+          }
+        ];
+      }
+    }
+
+    // 获取词库中文名称
+    function getDictName(value) {
+      const options = {
+        'cet6': '六级',
+        'kaoyan': '考研',
+        'ielts': '雅思',
+        'toefl': '托福'
+      };
+      return options[value] || value;
+    }
+
+    // 随机选择单词
+    function pickRandomWord() {
+      if (words.length === 0) {
+        // 检查是否有已删除的单词
+        const deletedCount = LS.get(storageKey('deleted')).length;
+        if (deletedCount > 0) {
+          return {
+            word: '所有单词已删除',
+            phonetic: '',
+            cn: '您可以在"已删除"标签页中恢复单词'
+          };
+        }
+        return null;
+      }
+      
+      const history = LS.get(storageKey('history')).map(h => h.word);
+      const pool = words.filter(w => w.word !== currentWord?.word && !history.includes(w.word));
+      
+      if (pool.length === 0) {
+        const filtered = words.filter(w => w.word !== currentWord?.word);
+        return filtered.length > 0 ? filtered[Math.floor(Math.random() * filtered.length)] : words[0];
+      }
+      
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    // 渲染单词卡片
+    function renderWordCard(word) {
+      if (!word) {
+        document.getElementById('loading').innerHTML = `
+          <i class="fa fa-exclamation-triangle text-accent text-xl mb-2"></i>
+          <p>未找到单词数据</p>
+          <p class="mt-2 text-sm">请检查词库文件是否正确</p>
+        `;
+        return;
+      }
+      
+      currentWord = word;
+      
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('word-content').classList.remove('hidden');
+      
+      // 动画效果
+      const wordElement = document.getElementById('word');
+      wordElement.classList.remove('word-reveal');
+      void wordElement.offsetWidth;
+      wordElement.classList.add('word-reveal');
+      
+      // 更新内容
+      wordElement.textContent = word.word;
+      document.getElementById('phonetic').textContent = word.phonetic;
+      document.getElementById('cn-meaning').textContent = word.cn;
+      
+      // 更新收藏按钮状态
+      const isFavorite = LS.get(storageKey('favorites')).includes(word.word);
+      const starButton = document.getElementById('star').querySelector('i');
+      starButton.className = isFavorite ? 'fa fa-star text-xl' : 'fa fa-star-o text-xl';
+      
+      // 如果是提示信息（所有单词已删除），隐藏删除按钮
+      document.getElementById('delete').style.display = word.word === '所有单词已删除' ? 'none' : 'flex';
+      
+      // 记录历史（如果不是提示信息）
+      if (word.word !== '所有单词已删除') {
+        const history = LS.get(storageKey('history'));
+        const updatedHistory = history.filter(h => h.word !== word.word);
+        updatedHistory.unshift({ word: word.word, ts: Date.now() });
+        LS.set(storageKey('history'), updatedHistory.slice(0, 100));
+        
+        if (document.querySelector('.tab-btn.text-primary')?.dataset.tab === 'hist') {
+          showTab('hist');
+        }
+      }
+    }
+
+    // 发音功能
+    function handlePronunciation() {
+      if (!currentWord || currentWord.word === '所有单词已删除') return;
+      
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(currentWord.word);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9;
+        
+        try {
+          window.speechSynthesis.speak(utterance);
+          showToast(`正在发音: ${currentWord.word}`);
+        } catch (e) {
+          console.error('语音合成失败', e);
+          fallbackToAudio();
+        }
+      } else {
+        fallbackToAudio();
+      }
+    }
+
+    // 音频播放备选方案
+    function fallbackToAudio() {
+      if (currentWord?.audio) {
+        try {
+          const audio = new Audio(currentWord.audio);
+          audio.play();
+          showToast(`正在发音: ${currentWord.word}`);
+        } catch (e) {
+          console.error('音频播放失败', e);
+          showToast('发音功能暂时不可用');
+        }
+      } else {
+        showToast('没有可用的发音资源');
+      }
+    }
+
+    // 收藏功能
+    function toggleFavorite() {
+      if (!currentWord || currentWord.word === '所有单词已删除') return;
+      
+      const favorites = LS.get(storageKey('favorites'));
+      const index = favorites.indexOf(currentWord.word);
+      
+      if (index > -1) {
+        favorites.splice(index, 1);
+        LS.set(storageKey('favorites'), favorites);
+        document.getElementById('star').querySelector('i').className = 'fa fa-star-o text-xl';
+        showToast(`已取消收藏: ${currentWord.word}`);
+      } else {
+        favorites.unshift(currentWord.word);
+        LS.set(storageKey('favorites'), favorites);
+        document.getElementById('star').querySelector('i').className = 'fa fa-star text-xl';
+        showToast(`已收藏: ${currentWord.word}`);
+      }
+      
+      if (document.querySelector('.tab-btn.text-primary')?.dataset.tab === 'fav') {
+        showTab('fav');
+      }
+    }
+
+    // 显示标签页内容
+    function showTab(tabType) {
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+      
+      // 更新标签样式
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.dataset.tab === tabType) {
+          btn.classList.add('text-primary', 'border-primary');
+          btn.classList.remove('text-gray-500', 'hover:text-gray-700', 'border-transparent', 'hover:border-gray-300');
+        } else {
+          btn.classList.remove('text-primary', 'border-primary');
+          btn.classList.add('text-gray-500', 'hover:text-gray-700', 'border-transparent', 'hover:border-gray-300');
+        }
+      });
+      
+      // 获取数据
+      let items = [];
+      if (tabType === 'fav') {
+        items = LS.get(storageKey('favorites'));
+        if (items.length === 0) {
+          list.innerHTML = `<li class="py-4 text-center text-gray-500"><i class="fa fa-info-circle mr-1"></i>暂无${getDictName(dictSelect.value)}词库的收藏单词</li>`;
+          return;
+        }
+      } else if (tabType === 'hist') {
+        items = LS.get(storageKey('history')).map(h => h.word);
+        if (items.length === 0) {
+          list.innerHTML = `<li class="py-4 text-center text-gray-500"><i class="fa fa-info-circle mr-1"></i>暂无${getDictName(dictSelect.value)}词库的浏览历史</li>`;
+          return;
+        }
+      } else if (tabType === 'deleted') {
+        items = LS.get(storageKey('deleted'));
+        if (items.length === 0) {
+          list.innerHTML = `<li class="py-4 text-center text-gray-500"><i class="fa fa-info-circle mr-1"></i>暂无已删除的单词</li>`;
+          return;
+        }
+      }
+      
+      // 渲染列表
+      items.forEach(word => {
+        const li = document.createElement('li');
+        li.className = 'py-3 px-2 hover:bg-gray-50 rounded-md transition-colors cursor-pointer flex justify-between items-center';
+        
+        // 单词名称
+        const wordSpan = document.createElement('span');
+        wordSpan.textContent = word;
+        li.appendChild(wordSpan);
+        
+        // 操作按钮区域
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'flex gap-2 ml-2';
+        
+        // 根据不同标签页添加不同操作按钮
+        if (tabType === 'fav') {
+          // 收藏列表：添加取消收藏按钮
+          const unstarBtn = document.createElement('button');
+          unstarBtn.className = 'action-btn text-gray-500 hover:text-danger p-1';
+          unstarBtn.innerHTML = '<i class="fa fa-times-circle"></i>';
+          unstarBtn.title = '取消收藏';
+          unstarBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // 阻止触发li的点击事件
+            showConfirmDialog(
+              '取消收藏', 
+              '确定要取消收藏单词"', 
+              word, 
+              () => unstarWord(word)
+            );
+          });
+          actionsDiv.appendChild(unstarBtn);
+        } else if (tabType === 'deleted') {
+          // 已删除列表：添加恢复按钮
+          const restoreBtn = document.createElement('button');
+          restoreBtn.className = 'action-btn text-gray-500 hover:text-primary p-1';
+          restoreBtn.innerHTML = '<i class="fa fa-undo"></i>';
+          restoreBtn.title = '恢复单词';
+          restoreBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // 阻止触发li的点击事件
+            restoreDeletedWord(word);
+          });
+          actionsDiv.appendChild(restoreBtn);
+        }
+        
+        // 所有列表项都添加删除按钮（除了已删除列表）
+        if (tabType !== 'deleted' && tabType !== 'fav') {
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'action-btn text-gray-500 hover:text-danger p-1';
+          deleteBtn.innerHTML = '<i class="fa fa-trash-o"></i>';
+          deleteBtn.title = '删除单词';
+          deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // 阻止触发li的点击事件
+            showConfirmDialog(
+              '删除单词', 
+              '确定要删除单词"', 
+              word, 
+              () => deleteWord(word)
+            );
+          });
+          actionsDiv.appendChild(deleteBtn);
+        }
+        
+        li.appendChild(actionsDiv);
+        
+        // 点击列表项显示单词详情（已删除列表除外）
+        if (tabType !== 'deleted') {
+          li.addEventListener('click', () => {
+            const wordData = words.find(w => w.word === word);
+            if (wordData) {
+              renderWordCard(wordData);
+              document.getElementById('card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+              showToast('该单词已被删除');
+            }
+          });
+        }
+        
+        list.appendChild(li);
+      });
+    }
+
+    // 初始化事件监听
+    function initEventListeners() {
+      // 下一个单词
+      document.getElementById('next').addEventListener('click', () => {
+        renderWordCard(pickRandomWord());
+      });
+      
+      // 收藏
+      document.getElementById('star').addEventListener('click', toggleFavorite);
+      
+      // 发音
+      document.getElementById('speak').addEventListener('click', handlePronunciation);
+      
+      // 删除单词
+      document.getElementById('delete').addEventListener('click', () => {
+        if (currentWord && currentWord.word !== '所有单词已删除') {
+          showConfirmDialog(
+            '删除单词', 
+            '确定要删除单词"', 
+            currentWord.word, 
+            () => deleteWord(currentWord)
+          );
+        }
+      });
+      
+      // 标签页切换
+      document.querySelectorAll('[data-tab]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          showTab(e.target.dataset.tab);
+        });
+      });
+      
+      // 词库切换
+      dictSelect.addEventListener('change', e => loadDict(e.target.value));
+    }
+
+    // 初始化应用
+    function init() {
+      initEventListeners();
+      loadDict(dictSelect.value);
+      showTab('fav');
+    }
+
+    // 启动应用
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
+    

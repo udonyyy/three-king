@@ -4,112 +4,288 @@
   <meta charset="UTF-8">
   <title>联系我们 - Three KING</title>
   <link rel="icon" href="atm.jpg" type="image/png/jpg">
+  <!-- Font Awesome 图标库 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  
   <style>
+    /* 全局样式 */
     body {
       font-family: Arial, sans-serif;
       background-color: #f0f2f5;
       margin: 0;
-      padding: 30px;
+      padding: 0;
     }
 
+    /* 导航栏设计 */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #569aca;
+      padding: 15px 5%;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .nav-brand {
+      color: white;
+      text-decoration: none;
+      font-size: 22px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 15px;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      transition: background-color 0.3s;
+    }
+    .nav-links a:hover {
+      background-color: #6ab0e2;
+    }
+
+    /* 主内容容器 */
+    .container {
+      max-width: 600px; /* 收缩宽度，突出竖排聚焦感 */
+      margin: 40px auto;
+      padding: 0 20px;
+    }
     h1 {
       text-align: center;
       color: #333;
+      margin-bottom: 30px;
+      font-size: 28px;
     }
 
-    nav {
-      text-align: center;
-      margin-bottom: 40px;
+    /* 联系卡片布局：强制竖排 */
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr; /* 始终单列 */
+      gap: 24px; /* 增大间距，增强呼吸感 */
     }
 
-    nav a {
-      text-decoration: none;
-      background-color: #007BFF;
-      color: white;
-      padding: 10px 18px;
-      margin: 0 10px;
-      border-radius: 6px;
-      font-size: 14px;
-      display: inline-block;
-      transition: background-color 0.3s;
-    }
-
-    nav a:hover {
-      background-color: #0056b3;
-    }
-
+    /* 交互卡片通用样式（深度优化） */
     .contact-card {
-      background-color: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      max-width: 500px;
-      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px; /* 更大圆角，更柔和 */
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
       padding: 30px;
-      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      transition: 
+        transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+        box-shadow 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    /* 渐变光效（高级感） */
+    .contact-card::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, rgba(255,255,255,0.5) 0%, transparent 100%);
+      transform: rotate(45deg);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .contact-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+    .contact-card:hover::before {
+      opacity: 1;
     }
 
-    .contact-card h2 {
-      margin-bottom: 20px;
-      color: #555;
-    }
-
-    .contact-item {
-      margin: 10px 0;
-      font-size: 16px;
-    }
-
-    .contact-item i {
+    /* 图标统一样式 + 差异化动画 */
+    .contact-card i {
+      font-size: 32px; /* 放大图标，增强识别 */
       color: #007BFF;
-      margin-right: 10px;
+      transition: transform 0.3s;
+    }
+    .contact-card span {
+      font-size: 18px; /* 放大文字，提升可读性 */
+      color: #444;
     }
 
+    /* 1. 哔哩哔哩（旋转动画 + 去下划线） */
+    .bilibili-card {
+      text-decoration: none; /* 强制去下划线 */
+    }
+    .bilibili-card i {
+      animation: rotate 5s infinite linear; /* 缓慢旋转，科技感 */
+    }
+    @keyframes rotate {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(360deg) scale(1.1); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+
+    /* 2. 邮箱（浮动动画 + 光效增强） */
+    .email-card {
+      cursor: default;
+    }
+    .email-card i {
+      animation: float 2.5s infinite ease-in-out;
+    }
+    @keyframes float {
+      0% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-8px) scale(1.05); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    /* 3. 微信（弹跳动画 + 交互反馈） */
+    .wechat-card i {
+      animation: bounce 2s infinite ease-in-out;
+    }
+    @keyframes bounce {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    /* 动画暂停交互（hover时聚焦） */
+    .contact-card:hover i {
+      animation-play-state: paused;
+    }
+
+    /* 微信二维码模态框（升级样式） */
+    .qr-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.65);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+    .qr-modal.show {
+      display: flex;
+    }
+    .qr-content {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      transform: scale(0.95);
+      transition: transform 0.3s;
+    }
+    .qr-modal.show .qr-content {
+      transform: scale(1);
+    }
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 24px;
+      color: #999;
+      cursor: pointer;
+      transition: color 0.3s, transform 0.3s;
+    }
+    .close-btn:hover {
+      color: #333;
+      transform: rotate(90deg);
+    }
+    .qr-content img {
+      max-width: 280px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .qr-content p {
+      margin: 0;
+      color: #666;
+    }
+
+    /* 页脚（更精致） */
     footer {
       text-align: center;
-      margin-top: 50px;
+      margin: 60px 0 20px;
       color: #999;
       font-size: 14px;
+      opacity: 0.8;
     }
   </style>
-  <!-- Font Awesome 图标库（用于图标） -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
+
 <body>
-
-  <h1>联系我们 Three KING</h1>
-
+  <!-- 导航栏 -->
   <nav>
-    <a href="index.html">返回主页</a>
-    <a href="about.html">关于我们</a>
-    <a href="life.html">生活记录</a>
+    <a href="index.html" class="nav-brand">
+      <i class="fa fa-star"></i> <!-- 替换为更贴合的图标（如星星） -->
+      Three King
+    </a>
   </nav>
 
-  <div class="contact-card">
-    <h2>联系方式</h2>
+  <!-- 主内容 -->
+  <div class="container">
+    <h1>联系我们 Three KING</h1>
+    
+    <div class="contact-grid">
+      <!-- 1. 哔哩哔哩（旋转动画 + 跳转） -->
+      <a href="https://space.bilibili.com/" target="_blank" class="contact-card bilibili-card">
+        <i class="fab fa-bilibili"></i>
+        <span>哔哩哔哩</span>
+      </a>
 
-    <div class="contact-item">
-      <i class="fas fa-envelope"></i> 邮箱：<a href="mailto:threeking@example.com">threeking@example.com</a>
-    </div>
+      <!-- 2. 邮箱（浮动动画 + 静态） -->
+      <div class="contact-card email-card">
+        <i class="fas fa-envelope"></i>
+        <span>2955334026@qq.com</span>
+      </div>
 
-    <div class="contact-item">
-      <i class="fas fa-phone"></i> 电话：+60 123-456-789
-    </div>
-
-    <div class="contact-item">
-      <i class="fab fa-weixin"></i> 微信号：threeking2025
-    </div>
-
-    <div class="contact-item">
-      <i class="fab fa-instagram"></i> Instagram：<a href="https://instagram.com/threeking" target="_blank">@threeking</a>
-    </div>
-
-    <div class="contact-item">
-      <i class="fab fa-github"></i> GitHub：<a href="https://github.com/threeking" target="_blank">github.com/threeking</a>
+      <!-- 3. 微信（弹跳动画 + 二维码） -->
+      <div class="contact-card wechat-card" onclick="openWechatQr()">
+        <i class="fab fa-weixin"></i>
+        <span>微信</span>
+      </div>
     </div>
   </div>
 
+  <!-- 微信二维码模态框（需替换图片地址） -->
+  <div class="qr-modal" id="wechatModal">
+    <div class="qr-content">
+      <span class="close-btn" onclick="closeWechatQr()">×</span>
+      <!-- 替换为你的微信二维码图片地址 -->
+      <img src="vx.jpg" alt="微信二维码">
+      <p>扫码加我联系我！</p>
+    </div>
+  </div>
+
+  <!-- 页脚 -->
   <footer>
-    &copy; 2025 Three KING 前端小组. 保留所有权利。
+    无限进步！(๑•̀ㅂ•́)و✧
   </footer>
 
+  <script>
+    // 微信二维码模态框控制
+    function openWechatQr() {
+      document.getElementById('wechatModal').classList.add('show');
+    }
+    function closeWechatQr() {
+      document.getElementById('wechatModal').classList.remove('show');
+    }
+    // 点击背景关闭模态框
+    window.onclick = function(e) {
+      const modal = document.getElementById('wechatModal');
+      if (e.target === modal) {
+        closeWechatQr();
+      }
+    }
+  </script>
 </body>
 </html>

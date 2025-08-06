@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>听歌猜曲 - Three King</title>
+    <style>
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #f5f5f7;
+            padding-bottom: 100px; /* 预留播放器位置 */
+        }
+
+        /* 导航栏样式 */
+        .navbar {
+            padding: 15px 20px;
+            background: #4d84ba;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 歌手分类选择器 */
+        .artist-filter {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .filter-title {
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .artist-select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: #f9f9f9;
+        }
+
+        /* 游戏标题区域 */
+        .game-header {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .game-header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            font-size: 18px;
+        }
+
+        .stats-item {
+            background: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* 游戏区域 */
+        .game-area {
+            background: #fff;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .song-hint {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .hint-text {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .artist-display {
+            font-size: 20px;
+            color: #333;
+            font-weight: 600;
+            padding: 10px;
+            background: #f0f0f5;
+            border-radius: 8px;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .option-btn {
+            padding: 15px;
+            background: #f5f5f5;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .option-btn:hover {
+            background: #f0f0f0;
+            border-color: #ddd;
+        }
+
+        .option-btn.correct {
+            background: #e8f8ef;
+            border-color: #4cd964;
+            color: #28a745;
+        }
+
+        .option-btn.wrong {
+            background: #fee;
+            border-color: #ff4d4f;
+            color: #dc3545;
+        }
+
+        .control-btn {
+            display: block;
+            margin: 0 auto;
+            padding: 12px 30px;
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: #34495e;
+        }
+
+        .feedback {
+            text-align: center;
+            font-size: 20px;
+            margin: 20px 0;
+            height: 30px;
+        }
+
+        /* 底部播放器 */
+        .player {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .play-control {
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .progress-container {
+            flex: 1;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #555;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .progress-bar::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 600px) {
+            .options {
+                grid-template-columns: 1fr;
+            }
+
+            .game-area {
+                padding: 20px;
+            }
+
+            .stats-item {
+                font-size: 14px;
+                padding: 6px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <a href="index.html">Three King🎧</a>
+    </nav>
+
+    <div class="container">
+        <!-- 新增歌手分类选择器 -->
+        <div class="artist-filter">
+            <div class="filter-title">选择歌手:</div>
+            <select id="artist-category" class="artist-select">
+                <option value="all">全部歌手</option>
+                <!-- 歌手选项将通过JS动态生成 -->
+            </select>
+        </div>
+
+        <div class="game-header">
+            <h1>猜歌名挑战</h1>
+            <div class="game-stats">
+                <div class="stats-item">当前关卡: <span id="current-level">1</span></div>
+                <div class="stats-item">得分: <span id="score">0</span></div>
+                <div class="stats-item">正确率: <span id="accuracy">0%</span></div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="song-hint">
+                <div class="hint-text">提示: 歌手是</div>
+                <div class="artist-display" id="artist-display">点击开始游戏</div>
+            </div>
+
+            <div class="options" id="options-container">
+                <!-- 选项按钮将通过JS动态生成 -->
+            </div>
+
+            <div class="feedback" id="feedback"></div>
+
+            <button class="control-btn" id="start-btn">开始游戏</button>
+        </div>
+    </div>
+
+    <!-- 底部播放器 -->
+    <div class="player">
+        <div class="play-control" id="play-pause-btn">▶</div>
+        <div class="progress-container">
+            <input type="range" class="progress-bar" id="progress-bar" min="0" max="100" value="0">
+        </div>
+        <audio id="audio-player" preload="metadata"></audio>
+    </div>
+
+    <script src="music.js"></script> <!-- 引入你的歌曲数据 -->
+    <script>
+        // DOM元素
+        const startBtn = document.getElementById('start-btn');
+        const optionsContainer = document.getElementById('options-container');
+        const artistDisplay = document.getElementById('artist-display');
+        const feedback = document.getElementById('feedback');
+        const audioPlayer = document.getElementById('audio-player');
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const currentLevelEl = document.getElementById('current-level');
+        const scoreEl = document.getElementById('score');
+        const accuracyEl = document.getElementById('accuracy');
+        const artistCategory = document.getElementById('artist-category');
+
+        // 游戏状态变量
+        let currentSong = null;
+        let currentLevel = 1;
+        let score = 0;
+        let totalAnswered = 0;
+        let correctAnswers = 0;
+        let isPlaying = false;
+        let usedSongIds = new Set(); // 记录已使用的歌曲，避免重复
+
+        // 初始化游戏
+        startBtn.addEventListener('click', startGame);
+        playPauseBtn.addEventListener('click', togglePlayPause);
+        audioPlayer.addEventListener('timeupdate', updateProgress);
+        progressBar.addEventListener('input', seekAudio);
+        artistCategory.addEventListener('change', resetGame);
+
+        // 初始化歌手分类选择器
+        function initArtistCategories() {
+            // 获取所有唯一的歌手
+            const artists = new Set();
+            songs.forEach(song => {
+                artists.add(song.artist);
+            });
+
+            // 添加到下拉菜单
+            artists.forEach(artist => {
+                const option = document.createElement('option');
+                option.value = artist;
+                option.textContent = artist;
+                artistCategory.appendChild(option);
+            });
+        }
+
+        // 重置游戏（当切换歌手分类时）
+        function resetGame() {
+            currentLevel = 1;
+            score = 0;
+            totalAnswered = 0;
+            correctAnswers = 0;
+            usedSongIds.clear();
+            updateStats();
+            feedback.textContent = '';
+            optionsContainer.innerHTML = '';
+            artistDisplay.textContent = '点击开始游戏';
+            startBtn.disabled = false;
+            startBtn.textContent = '开始游戏';
+            audioPlayer.pause();
+            audioPlayer.src = '';
+            isPlaying = false;
+            playPauseBtn.textContent = '▶';
+        }
+
+        // 开始游戏
+        function startGame() {
+            // 重置状态
+            feedback.textContent = '';
+            optionsContainer.innerHTML = '';
+            startBtn.disabled = true;
+            startBtn.textContent = '游戏进行中...';
+            
+            // 选择未使用过的随机歌曲
+            currentSong = getRandomUnusedSong();
+            if (!currentSong) {
+                feedback.textContent = '恭喜你完成了该分类下的所有歌曲！';
+                startBtn.disabled = false;
+                startBtn.textContent = '重新开始';
+                usedSongIds.clear(); // 重置已使用歌曲
+                return;
+            }
+
+            // 加载并播放歌曲
+            loadSong(currentSong);
+            
+            // 显示歌手作为提示
+            artistDisplay.textContent = currentSong.artist;
+            
+            // 生成选项（1个正确答案 + 3个干扰项）
+            generateOptions(currentSong.title);
+        }
+
+        // 获取未使用过的随机歌曲（考虑当前选择的歌手分类）
+        function getRandomUnusedSong() {
+            // 根据选择的分类筛选歌曲
+            const selectedArtist = artistCategory.value;
+            let filteredSongs = songs;
+            
+            if (selectedArtist !== 'all') {
+                filteredSongs = songs.filter(song => song.artist === selectedArtist);
+            }
+
+            // 如果所有歌曲都用过了，重置
+            if (usedSongIds.size >= filteredSongs.length) {
+                usedSongIds.clear();
+            }
+
+            // 如果该分类下没有歌曲
+            if (filteredSongs.length === 0) {
+                return null;
+            }
+
+            let randomSong;
+            do {
+                const randomIndex = Math.floor(Math.random() * filteredSongs.length);
+                randomSong = filteredSongs[randomIndex];
+            } while (usedSongIds.has(randomSong.file)); // 用file作为唯一标识
+
+            usedSongIds.add(randomSong.file);
+            return randomSong;
+        }
+
+        // 加载歌曲
+        function loadSong(song) {
+            audioPlayer.src = song.file;
+            audioPlayer.load();
+            audioPlayer.currentTime = 0; // 从头开始播放
+            audioPlayer.play().then(() => {
+                isPlaying = true;
+                playPauseBtn.textContent = '❚❚';
+            }).catch(err => {
+                console.error('播放失败:', err);
+                feedback.textContent = '音频加载失败，请重试';
+            });
+        }
+
+        // 生成选项（确保干扰项来自同一分类）
+        function generateOptions(correctTitle) {
+            // 根据当前分类筛选干扰项
+            const selectedArtist = artistCategory.value;
+            let candidateSongs = songs;
+            
+            if (selectedArtist !== 'all') {
+                candidateSongs = songs.filter(song => song.artist === selectedArtist);
+            }
+
+            // 收集干扰项（从筛选后的歌曲中选择）
+            const distractors = [];
+            while (distractors.length < 3) {
+                const randomIndex = Math.floor(Math.random() * candidateSongs.length);
+                const candidate = candidateSongs[randomIndex].title;
+                // 避免干扰项与正确答案相同或重复
+                if (candidate !== correctTitle && !distractors.includes(candidate)) {
+                    distractors.push(candidate);
+                }
+                // 防止无限循环（如果特定分类下歌曲太少）
+                if (distractors.length >= candidateSongs.length - 1) break;
+            }
+
+            // 如果干扰项不足3个，从其他分类补充
+            if (distractors.length < 3) {
+                const otherSongs = songs.filter(song => 
+                    song.title !== correctTitle && 
+                    !distractors.includes(song.title) &&
+                    (selectedArtist === 'all' || song.artist !== selectedArtist)
+                );
+                
+                while (distractors.length < 3 && otherSongs.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * otherSongs.length);
+                    const candidate = otherSongs[randomIndex].title;
+                    if (!distractors.includes(candidate)) {
+                        distractors.push(candidate);
+                    }
+                }
+            }
+
+            // 混合正确答案和干扰项
+            const allOptions = [correctTitle, ...distractors]
+                .sort(() => Math.random() - 0.5); // 随机排序
+
+            // 创建选项按钮
+            allOptions.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = option;
+                btn.addEventListener('click', () => checkAnswer(btn, option === correctTitle));
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        // 检查答案
+        function checkAnswer(btn, isCorrect) {
+            // 禁用所有选项
+            const allOptions = document.querySelectorAll('.option-btn');
+            allOptions.forEach(btn => btn.disabled = true);
+
+            // 标记正确/错误
+            if (isCorrect) {
+                btn.classList.add('correct');
+                feedback.textContent = '正确！加10分！';
+                feedback.style.color = '#28a745';
+                score += 10;
+                correctAnswers++;
+            } else {
+                btn.classList.add('wrong');
+                // 高亮正确答案
+                allOptions.forEach(opt => {
+                    if (opt.textContent === currentSong.title) {
+                        opt.classList.add('correct');
+                    }
+                });
+                feedback.textContent = `错误！正确答案是：${currentSong.title}`;
+                feedback.style.color = '#dc3545';
+            }
+
+            // 更新统计数据
+            totalAnswered++;
+            currentLevel++;
+            updateStats();
+
+            // 暂停播放
+            audioPlayer.pause();
+            isPlaying = false;
+            playPauseBtn.textContent = '▶';
+
+            // 3秒后进入下一关
+            setTimeout(() => {
+                startGame();
+            }, 3000);
+        }
+
+        // 更新统计数据
+        function updateStats() {
+            currentLevelEl.textContent = currentLevel;
+            scoreEl.textContent = score;
+            const accuracy = totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0;
+            accuracyEl.textContent = `${accuracy}%`;
+        }
+
+        // 播放/暂停切换
+        function togglePlayPause() {
+            if (audioPlayer.src) { // 确保有歌曲加载
+                if (isPlaying) {
+                    audioPlayer.pause();
+                    playPauseBtn.textContent = '▶';
+                } else {
+                    audioPlayer.play();
+                    playPauseBtn.textContent = '❚❚';
+                }
+                isPlaying = !isPlaying;
+            }
+        }
+
+        // 更新进度条
+        function updateProgress() {
+            const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            progressBar.value = progress || 0;
+        }
+
+        // 调整播放进度
+        function seekAudio() {
+            const seekTime = (progressBar.value / 100) * audioPlayer.duration;
+            audioPlayer.currentTime = seekTime;
+        }
+
+        // 页面加载完成后初始化歌手分类
+        window.addEventListener('load', initArtistCategories);
+    </script>
+</body>
+</html>

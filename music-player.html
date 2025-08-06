@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>音乐播放器 - Three KING</title>
+  <link rel="icon" href="atm.jpg" type="image/png/jpg">
+
+  <!-- 引入外部资源 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#074479",
+            secondary: "#7EC8F1",
+            darkMode: {
+              bg: "#0F172A",
+              card: "#1E293B",
+              text: "#F8FAFC",
+              textLight: "#729FC3",
+              hover: "#04517D",
+            },
+          },
+          fontFamily: {
+            inter: ["Inter", "system-ui", "sans-serif"],
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- 自定义样式 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .player-shadow {
+        box-shadow: 0 8px 30px rgba(177, 15, 15, 0.12);
+      }
+      .dark-player-shadow {
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      }
+      .btn-hover {
+        @apply transition-all duration-300 hover:scale-105 active:scale-95;
+      }
+      .song-hover {
+        @apply transition-all duration-200 hover:bg-primary/5 hover:translate-x-1;
+      }
+      .dark-song-hover {
+        @apply transition-all duration-200 hover:bg-darkMode-hover hover:translate-x-1;
+      }
+      .nav-shadow {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      }
+      .dark-nav-shadow {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      }
+      .dark ::-webkit-scrollbar {
+        width: 6px;
+      }
+      .dark ::-webkit-scrollbar-track {
+        background: #1E293B;
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #475569;
+        border-radius: 3px;
+      }
+    }
+  </style>
+</head>
+
+<body class="font-inter bg-gradient-to-br from-slate-50 to-slate-100 dark:bg-darkMode-bg dark:text-darkMode-text min-h-screen p-0 transition-colors duration-300">
+  <!-- 导航栏 -->
+  <nav class="bg-white dark:bg-darkMode-card nav-shadow dark:dark-nav-shadow sticky top-0 z-50 transition-all duration-300">
+    <div class="max-w-4xl mx-auto px-4 md:px-6">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center">
+          <a href="index.html" class="text-xl font-bold text-primary flex items-center">
+            <i class="fa fa-music mr-2"></i>
+            Three King
+          </a>
+        </div>
+        <div class="flex items-center gap-4">
+          <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-darkMode-hover btn-hover transition-colors duration-300">
+            <i class="fa fa-moon-o text-gray-600 dark:text-yellow-300 dark:hidden"></i>
+            <i class="fa fa-sun-o text-yellow-500 hidden dark:block"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 主容器 -->
+  <div class="max-w-4xl mx-auto p-4 md:p-8">
+    <!-- 播放器主体 -->
+    <div class="bg-white dark:bg-darkMode-card rounded-2xl player-shadow dark:dark-player-shadow overflow-hidden mb-8 transition-all duration-300">
+      <!-- 顶部信息区 -->
+      <div class="p-6 md:p-8 bg-gradient-to-r from-primary/90 to-primary text-white">
+        <h1 class="text-2xl md:text-3xl font-bold mb-2">音乐播放器</h1>
+        <p class="opacity-90">共 <span id="total-songs">0</span> 首歌曲</p>
+      </div>
+
+      <!-- 播放控制区 -->
+      <div class="p-6 md:p-8">
+        <!-- 当前播放信息 -->
+        <div class="mb-6 text-center">
+          <h2 id="current-title" class="text-xl md:text-2xl font-bold text-slate-800 dark:text-darkMode-text mb-1 truncate">未播放音乐</h2>
+          <p id="current-artist" class="text-gray-500 dark:text-darkMode-textLight">点击列表开始播放</p>
+        </div>
+
+        <!-- 进度条 -->
+        <div class="mb-6">
+          <div class="flex justify-between text-sm text-gray-500 dark:text-darkMode-textLight mb-2">
+            <span id="current-time">00:00</span>
+            <span id="total-time">00:00</span>
+          </div>
+          <div class="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden cursor-pointer" id="progress-bar">
+            <div id="progress-fill" class="h-full bg-gradient-to-r from-primary to-secondary w-0 transition-all duration-200"></div>
+          </div>
+        </div>
+
+        <!-- 控制按钮 -->
+        <div class="flex items-center justify-center gap-6 md:gap-10">
+          <button id="prev-btn" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-slate-800 dark:text-darkMode-text btn-hover">
+            <i class="fa fa-step-backward text-lg"></i>
+          </button>
+          <button id="play-btn" class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-white shadow-lg btn-hover">
+            <i class="fa fa-play text-2xl"></i>
+          </button>
+          <button id="next-btn" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-slate-800 dark:text-darkMode-text btn-hover">
+            <i class="fa fa-step-forward text-lg"></i>
+          </button>
+        </div>
+
+        <!-- 播放模式控制 -->
+        <div class="flex justify-center mt-6 gap-4">
+          <button id="mode-btn" class="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-slate-600 dark:text-darkMode-text btn-hover" title="切换播放模式">
+            <i class="fa fa-repeat text-lg"></i>
+            <span class="ml-1 text-sm">顺序</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 歌曲列表与筛选区 -->
+    <div class="bg-white dark:bg-darkMode-card rounded-2xl player-shadow dark:dark-player-shadow p-6 md:p-8 transition-all duration-300">
+      <!-- 筛选栏 -->
+      <div class="mb-6">
+        <h3 class="text-lg font-bold text-slate-800 dark:text-darkMode-text mb-4">歌曲列表</h3>
+        
+        <!-- 歌手折叠面板 -->
+        <div class="mb-4 border rounded-lg overflow-hidden">
+          <button id="artist-toggle" class="w-full flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800/50 text-left">
+            <span class="font-medium">歌手筛选</span>
+            <i class="fa fa-chevron-down text-gray-500 transition-transform duration-300"></i>
+          </button>
+          <div id="artist-filters" class="p-2">
+            <div class="flex flex-wrap gap-2">
+              <button class="filter-btn active px-4 py-2 rounded-full bg-primary text-white text-sm btn-hover" data-filter="all">
+                全部歌曲
+              </button>
+              <!-- 歌手筛选按钮会动态生成 -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 歌曲列表 -->
+      <div class="overflow-hidden">
+        <ul id="song-list" class="space-y-1 max-h-80 overflow-y-auto pr-2">
+          <!-- 歌曲列表会动态生成 -->
+          <li class="text-center text-gray-500 dark:text-darkMode-textLight py-8">加载中...</li>
+        </ul>
+      </div>
+
+      <!-- 分页控件 -->
+      <div id="pagination" class="flex justify-center gap-1 mt-6">
+        <!-- 页码按钮会动态生成 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 引入歌曲数据 -->
+  <script src="music.js"></script>
+  <!-- 核心逻辑脚本 -->
+  <script>
+    // 初始化主题
+    function initTheme() {
+      const isDark = localStorage.theme === "dark" || (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      if (isDark) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    }
+    initTheme();
+
+    // 全局变量（使用 music.js 中的 songs 数组）
+    let filteredSongs = [...songs]; // 筛选后的歌曲列表
+    let currentIndex = 0; // 当前播放索引
+    let isPlaying = false; // 播放状态
+    let currentPage = 1; // 当前页码
+    const pageSize = 10; // 每页显示数量
+    // 播放模式: 'sequence' 顺序, 'loop' 单曲循环, 'random' 随机
+    let playMode = 'sequence';
+    // 记录随机播放历史，避免重复
+    let randomHistory = [];
+
+    // DOM 元素
+    const audio = new Audio();
+    const playBtn = document.getElementById("play-btn");
+    const prevBtn = document.getElementById("prev-btn");
+    const nextBtn = document.getElementById("next-btn");
+    const progressBar = document.getElementById("progress-bar");
+    const progressFill = document.getElementById("progress-fill");
+    const currentTimeEl = document.getElementById("current-time");
+    const totalTimeEl = document.getElementById("total-time");
+    const currentTitle = document.getElementById("current-title");
+    const currentArtist = document.getElementById("current-artist");
+    const songListEl = document.getElementById("song-list");
+    const totalSongsEl = document.getElementById("total-songs");
+    const paginationEl = document.getElementById("pagination");
+    const modeBtn = document.getElementById("mode-btn");
+    const artistToggle = document.getElementById("artist-toggle");
+    const artistFilters = document.getElementById("artist-filters");
+
+    // 更新总歌曲数
+    totalSongsEl.textContent = songs.length;
+
+    // 生成歌手筛选按钮
+    function generateArtistFilters() {
+      const filterContainer = document.querySelector("#artist-filters .flex.flex-wrap");
+      const uniqueArtists = [...new Set(songs.map(song => song.artist.trim()))];
+
+      uniqueArtists.forEach(artist => {
+        const btn = document.createElement("button");
+        btn.className = "filter-btn px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-darkMode-text text-sm btn-hover transition-colors duration-300";
+        btn.textContent = artist;
+        btn.dataset.filter = artist;
+
+        btn.addEventListener("click", handleFilterClick);
+        filterContainer.appendChild(btn);
+      });
+
+      // 绑定"全部歌曲"按钮事件
+      document.querySelector('.filter-btn[data-filter="all"]').addEventListener("click", handleFilterClick);
+    }
+
+    // 筛选按钮点击处理
+    function handleFilterClick(e) {
+      const filter = e.target.dataset.filter;
+      
+      // 重置所有按钮样式
+      document.querySelectorAll(".filter-btn").forEach(btn => {
+        btn.classList.remove("active", "bg-primary", "text-white");
+        btn.classList.add("bg-gray-100", "text-gray-700", "dark:bg-gray-700", "dark:text-darkMode-text");
+      });
+      
+      // 激活当前按钮
+      e.target.classList.add("active", "bg-primary", "text-white");
+      e.target.classList.remove("bg-gray-100", "text-gray-700", "dark:bg-gray-700", "dark:text-darkMode-text");
+      
+      // 更新筛选列表
+      filteredSongs = filter === "all" ? [...songs] : songs.filter(song => song.artist.trim() === filter);
+      currentPage = 1; // 重置到第一页
+      renderSongList();
+      renderPagination();
+    }
+
+    // 渲染歌曲列表
+    function renderSongList() {
+      songListEl.innerHTML = "";
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+      const currentPageSongs = filteredSongs.slice(start, end);
+
+      if (currentPageSongs.length === 0) {
+        songListEl.innerHTML = '<li class="text-center text-gray-500 dark:text-darkMode-textLight py-8">没有找到歌曲</li>';
+        return;
+      }
+
+      const isDarkMode = document.documentElement.classList.contains("dark");
+
+      currentPageSongs.forEach((song, index) => {
+        const originalIndex = filteredSongs.findIndex(s => s.file === song.file);
+        const isActive = originalIndex === currentIndex;
+
+        const li = document.createElement("li");
+        li.className = `flex items-center gap-3 p-3 rounded-lg ${isDarkMode ? "dark-song-hover" : "song-hover"} ${
+          isActive ? "bg-primary/10" : isDarkMode ? "bg-gray-800/30" : "bg-gray-50"
+        } transition-colors duration-300`;
+        li.innerHTML = `
+          <div class="w-8 text-center">
+            ${isActive ? '<i class="fa fa-volume-up text-primary"></i>' : `<span class="text-gray-400 dark:text-darkMode-textLight">${start + index + 1}</span>`}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-medium text-slate-800 dark:text-darkMode-text truncate">${song.title}</div>
+            <div class="text-sm text-gray-500 dark:text-darkMode-textLight truncate">${song.artist}</div>
+          </div>
+          <button class="text-gray-400 hover:text-primary dark:text-darkMode-textLight btn-hover" data-index="${originalIndex}">
+            <i class="fa fa-play"></i>
+          </button>
+        `;
+
+        // 点击列表项播放歌曲
+        li.addEventListener("click", (e) => {
+          if (!e.target.closest("button")) playSong(originalIndex);
+        });
+        // 点击播放按钮播放歌曲
+        li.querySelector("button").addEventListener("click", () => playSong(originalIndex));
+
+        songListEl.appendChild(li);
+      });
+    }
+
+    // 生成分页按钮
+    function renderPagination() {
+      paginationEl.innerHTML = "";
+      const totalPages = Math.ceil(filteredSongs.length / pageSize);
+      if (totalPages <= 1) return;
+
+      const isDarkMode = document.documentElement.classList.contains("dark");
+
+      // 上一页
+      const prevPageBtn = document.createElement("button");
+      prevPageBtn.className = `w-8 h-8 flex items-center justify-center rounded ${
+        currentPage > 1 ? "bg-primary text-white" : `bg-gray-100 ${isDarkMode ? "text-darkMode-textLight bg-gray-700" : "text-gray-400"}`
+      } transition-colors duration-300`;
+      prevPageBtn.innerHTML = '<i class="fa fa-angle-left"></i>';
+      prevPageBtn.addEventListener("click", () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderSongList();
+          renderPagination();
+        }
+      });
+      paginationEl.appendChild(prevPageBtn);
+
+      // 页码按钮
+      const startPage = Math.max(1, currentPage - 2);
+      const endPage = Math.min(totalPages, startPage + 4);
+
+      for (let i = startPage; i <= endPage; i++) {
+        const pageBtn = document.createElement("button");
+        pageBtn.className = `w-8 h-8 flex items-center justify-center rounded ${
+          i === currentPage ? "bg-primary text-white" : `bg-gray-100 ${isDarkMode ? "text-darkMode-text bg-gray-700" : "text-gray-700"}`
+        } transition-colors duration-300`;
+        pageBtn.textContent = i;
+        pageBtn.addEventListener("click", () => {
+          currentPage = i;
+          renderSongList();
+          renderPagination();
+        });
+        paginationEl.appendChild(pageBtn);
+      }
+
+      // 下一页
+      const nextPageBtn = document.createElement("button");
+      nextPageBtn.className = `w-8 h-8 flex items-center justify-center rounded ${
+        currentPage < totalPages ? "bg-primary text-white" : `bg-gray-100 ${isDarkMode ? "text-darkMode-textLight bg-gray-700" : "text-gray-400"}`
+      } transition-colors duration-300`;
+      nextPageBtn.innerHTML = '<i class="fa fa-angle-right"></i>';
+      nextPageBtn.addEventListener("click", () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderSongList();
+          renderPagination();
+        }
+      });
+      paginationEl.appendChild(nextPageBtn);
+    }
+
+    // 播放歌曲
+    function playSong(index) {
+      if (index < 0 || index >= filteredSongs.length) return;
+
+      currentIndex = index;
+      const song = filteredSongs[currentIndex];
+      audio.src = song.file;
+      audio.play();
+      isPlaying = true;
+      updatePlayPauseIcon();
+      
+      // 更新当前播放信息
+      currentTitle.textContent = song.title;
+      currentArtist.textContent = song.artist;
+      
+      // 高亮当前播放歌曲
+      renderSongList();
+      
+      // 滚动到当前播放歌曲
+      const activeLi = songListEl.querySelector(`li:has(.fa-volume-up)`);
+      if (activeLi) {
+        activeLi.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    // 更新播放/暂停图标
+    function updatePlayPauseIcon() {
+      const icon = playBtn.querySelector('i');
+      if (isPlaying) {
+        icon.classList.remove('fa-play');
+        icon.classList.add('fa-pause');
+      } else {
+        icon.classList.remove('fa-pause');
+        icon.classList.add('fa-play');
+      }
+    }
+
+    // 切换播放/暂停
+    function togglePlayPause() {
+      if (audio.src === '') {
+        // 无歌曲时播放第一首
+        if (filteredSongs.length > 0) {
+          playSong(0);
+        }
+        return;
+      }
+
+      if (isPlaying) {
+        audio.pause();
+      } else {
+        audio.play();
+      }
+      isPlaying = !isPlaying;
+      updatePlayPauseIcon();
+    }
+
+    // 播放上一首
+    function playPrevious() {
+      if (filteredSongs.length === 0) return;
+      
+      if (playMode === 'loop') {
+        // 单曲循环：重置当前歌曲
+        audio.currentTime = 0;
+        audio.play();
+        return;
+      }
+      
+      if (playMode === 'random') {
+        // 随机播放：从历史记录取上一首
+        if (randomHistory.length > 1) {
+          randomHistory.pop();
+          currentIndex = randomHistory[randomHistory.length - 1];
+        } else {
+          // 历史记录不足时随机生成
+          let prevIndex;
+          do {
+            prevIndex = Math.floor(Math.random() * filteredSongs.length);
+          } while (prevIndex === currentIndex && filteredSongs.length > 1);
+          currentIndex = prevIndex;
+        }
+      } else {
+        // 顺序播放：索引递减
+        currentIndex = (currentIndex - 1 + filteredSongs.length) % filteredSongs.length;
+      }
+      
+      playSong(currentIndex);
+    }
+
+    // 播放下一首
+    function playNext() {
+      if (filteredSongs.length === 0) return;
+      
+      if (playMode === 'loop') {
+        // 单曲循环：重置当前歌曲
+        audio.currentTime = 0;
+        audio.play();
+        return;
+      }
+      
+      if (playMode === 'random') {
+        // 随机播放：生成不重复索引
+        let nextIndex;
+        if (filteredSongs.length <= 1) {
+          nextIndex = 0;
+        } else {
+          do {
+            nextIndex = Math.floor(Math.random() * filteredSongs.length);
+          } while (nextIndex === currentIndex);
+        }
+        randomHistory.push(currentIndex);
+        // 限制历史记录长度
+        if (randomHistory.length > 10) randomHistory.shift();
+        currentIndex = nextIndex;
+      } else {
+        // 顺序播放：索引递增
+        currentIndex = (currentIndex + 1) % filteredSongs.length;
+      }
+      
+      playSong(currentIndex);
+    }
+
+    // 切换播放模式
+    function togglePlayMode() {
+      const modeIcon = modeBtn.querySelector('i');
+      const modeText = modeBtn.querySelector('span');
+      
+      // 循环切换模式
+      if (playMode === 'sequence') {
+        playMode = 'loop';
+        modeIcon.className = 'fa fa-repeat text-lg text-primary';
+        modeText.textContent = '单曲循环';
+      } else if (playMode === 'loop') {
+        playMode = 'random';
+        modeIcon.className = 'fa fa-random text-lg text-primary';
+        modeText.textContent = '随机播放';
+      } else {
+        playMode = 'sequence';
+        modeIcon.className = 'fa fa-list text-lg text-primary';
+        modeText.textContent = '顺序播放';
+      }
+    }
+
+    // 处理歌曲结束事件
+    function handleSongEnded() {
+      if (playMode === 'loop') {
+        // 单曲循环：重新播放
+        audio.currentTime = 0;
+        audio.play();
+      } else {
+        // 其他模式：播放下一首
+        playNext();
+      }
+    }
+
+    // 更新进度条
+    function updateProgress() {
+      if (isNaN(audio.duration)) return;
+      
+      const percent = (audio.currentTime / audio.duration) * 100;
+      progressFill.style.width = `${percent}%`;
+      
+      // 更新时间显示
+      currentTimeEl.textContent = formatTime(audio.currentTime);
+      totalTimeEl.textContent = formatTime(audio.duration);
+    }
+
+    // 格式化时间（秒 -> mm:ss）
+    function formatTime(seconds) {
+      const minutes = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // 跳转到指定进度
+    function seekProgress(e) {
+      const rect = progressBar.getBoundingClientRect();
+      const pos = (e.clientX - rect.left) / rect.width;
+      audio.currentTime = pos * audio.duration;
+    }
+
+    // 切换主题
+    function toggleTheme() {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.theme = 'light';
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.theme = 'dark';
+      }
+      // 重新渲染样式
+      renderSongList();
+      renderPagination();
+    }
+
+    // 切换歌手筛选面板
+    function toggleArtistFilters() {
+      const icon = artistToggle.querySelector('i');
+      artistFilters.classList.toggle('hidden');
+      icon.classList.toggle('rotate-180');
+    }
+
+    // 事件监听
+    playBtn.addEventListener('click', togglePlayPause);
+    prevBtn.addEventListener('click', playPrevious);
+    nextBtn.addEventListener('click', playNext);
+    modeBtn.addEventListener('click', togglePlayMode);
+    audio.addEventListener('timeupdate', updateProgress);
+    audio.addEventListener('ended', handleSongEnded);
+    progressBar.addEventListener('click', seekProgress);
+    document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+    artistToggle.addEventListener('click', toggleArtistFilters);
+
+    // 初始化
+    function init() {
+      artistFilters.classList.add('hidden'); // 默认隐藏歌手筛选面板
+      generateArtistFilters(); // 生成歌手筛选按钮
+      renderSongList(); // 渲染歌曲列表
+      renderPagination(); // 生成分页
+    }
+
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

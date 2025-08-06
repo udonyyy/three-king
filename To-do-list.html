@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日待办|番茄钟 - Three KING</title>
+    <link rel="icon" href="atm.jpg" type="image/png/jpg">
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 引入Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    
+    <!-- 配置Tailwind自定义颜色和字体 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        accent: '#F59E0B',
+                        danger: '#EF4444',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .transition-height {
+                transition: max-height 0.3s ease-in-out;
+            }
+        }
+    </style>
+
+    <style>
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+        
+        /* 暗色模式 */
+        .dark {
+            --bg-color: #1E293B;
+            --text-color: #F8FAFC;
+            --card-bg: #334155;
+            --border-color: #475569;
+            --gray-50: #0F172A;
+            --gray-100: #1E293B;
+            --gray-200: #334155;
+            --gray-500: #94A3B8;
+        }
+        
+        .dark body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        
+        .dark .bg-white {
+            background-color: var(--card-bg);
+        }
+        
+        .dark .border-gray-100,
+        .dark .border-gray-200 {
+            border-color: var(--border-color);
+        }
+        
+        .dark .bg-gray-50 {
+            background-color: var(--gray-50);
+        }
+        
+        .dark .bg-gray-100 {
+            background-color: var(--gray-100);
+        }
+        
+        .dark .bg-gray-200 {
+            background-color: var(--gray-200);
+        }
+        
+        .dark .text-gray-500,
+        .dark .text-gray-600,
+        .dark .text-gray-700 {
+            color: var(--gray-500);
+        }
+        
+        .dark .text-dark {
+            color: var(--text-color);
+        }
+
+        /* 任务完成动画 */
+        .task-complete {
+            animation: fadeOut 0.5s ease-out;
+        }
+        
+        @keyframes fadeOut {
+            0% { opacity: 1; transform: translateX(0); }
+            100% { opacity: 0; transform: translateX(10px); }
+        }
+
+        .task-enter {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateX(-10px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans text-dark">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-md fixed w-full top-0 z-50 transition-all duration-300" id="header">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <a href="index.html" class="text-xl font-bold text-primary flex items-center hover:opacity-90 transition-opacity">
+                    <i class="fa fa-shield mr-2"></i>Three King
+                </a>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <button id="themeToggle" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <i class="fa fa-moon-o text-gray-600"></i>
+                </button>
+                <button id="statsBtn" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <i class="fa fa-bar-chart text-gray-600"></i>
+                </button>
+                <button id="settingsBtn" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <i class="fa fa-cog text-gray-600"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <!-- 主要内容区 -->
+    <main class="flex-1 container mx-auto px-4 pt-20 pb-10">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+            <!-- 左侧：待办事项和统计摘要 -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- 今日待办 -->
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+                    <div class="flex items-center justify-between mb-5">
+                        <h2 class="text-xl font-bold flex items-center">
+                            <i class="fa fa-list-ul text-primary mr-2"></i>
+                            今日待办
+                            <span id="todayDate" class="ml-3 text-gray-500 font-normal text-sm"></span>
+                        </h2>
+                        <div class="flex items-center space-x-2">
+                            <button id="filterTasksBtn" class="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-600">
+                                <i class="fa fa-filter"></i>
+                            </button>
+                            <button id="clearCompletedBtn" class="text-sm text-gray-500 hover:text-danger transition-colors">
+                                <i class="fa fa-trash-o mr-1"></i> 清除已完成
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 添加新任务 -->
+                    <div class="flex items-center mb-6 relative">
+                        <input 
+                            type="text" 
+                            id="newTaskInput" 
+                            placeholder="添加新任务..." 
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all pr-32"
+                        >
+                        <div class="absolute right-2 flex items-center space-x-1">
+                            <select id="taskPriority" class="bg-white border border-gray-200 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
+                                <option value="low">
+                                    <i class="fa fa-flag-o text-gray-400"></i> 低
+                                </option>
+                                <option value="medium" selected>
+                                    <i class="fa fa-flag text-accent"></i> 中
+                                </option>
+                                <option value="high">
+                                    <i class="fa fa-flag text-danger"></i> 高
+                                </option>
+                            </select>
+                            <button id="addTaskBtn" class="bg-primary hover:bg-primary/90 text-white px-4 py-1.5 rounded-md transition-colors">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 任务列表 -->
+                    <div id="taskList" class="space-y-2 max-h-[calc(100vh-500px)] overflow-y-auto pr-2">
+                        <!-- 任务项将通过JS动态生成 -->
+                    </div>
+                </div>
+                
+                <!-- 统计摘要 (移到了今日待办下方) -->
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+                    <h2 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fa fa-tachometer text-primary mr-2"></i>
+                        统计摘要
+                    </h2>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <div class="text-sm text-gray-500">总任务数</div>
+                            <div class="text-2xl font-bold" id="totalTasksCount">0</div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <div class="text-sm text-gray-500">已完成</div>
+                            <div class="text-2xl font-bold text-secondary" id="completedTasksCount">0</div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <div class="text-sm text-gray-500">进行中</div>
+                            <div class="text-2xl font-bold text-accent" id="activeTasksCount">0</div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <div class="text-sm text-gray-500">今日专注</div>
+                            <div class="text-2xl font-bold text-primary" id="todayFocusTime">0分钟</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：番茄钟和专注任务 -->
+            <div class="space-y-6">
+                <!-- 番茄钟 -->
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+                    <h2 class="text-xl font-bold mb-5 flex items-center">
+                        <i class="fa fa-clock-o text-primary mr-2"></i>
+                        番茄钟
+                    </h2>
+                    
+                    <div class="flex flex-col items-center">
+                        <!-- 计时器圆环 -->
+                        <div class="relative mb-4">
+                            <svg width="200" height="200" class="transform -rotate-90">
+                                <circle cx="100" cy="100" r="90" fill="none" stroke="#f3f4f6" stroke-width="10"/>
+                                <circle id="timerProgress" cx="100" cy="100" r="90" fill="none" stroke="#3B82F6" stroke-width="10" stroke-dasharray="565.48" stroke-dashoffset="0"/>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <div id="timerDisplay" class="text-4xl font-bold">25:00</div>
+                                <div id="timerLabel" class="text-gray-500 mt-1">点击开始专注</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 番茄钟指示器 -->
+                        <div class="flex space-x-2 mb-6">
+                            <div id="pomodoro1" class="w-3 h-3 rounded-full bg-gray-200"></div>
+                            <div id="pomodoro2" class="w-3 h-3 rounded-full bg-gray-200"></div>
+                            <div id="pomodoro3" class="w-3 h-3 rounded-full bg-gray-200"></div>
+                            <div id="pomodoro4" class="w-3 h-3 rounded-full bg-gray-200"></div>
+                        </div>
+                        
+                        <!-- 控制按钮 -->
+                        <div class="flex space-x-3">
+                            <button id="startTimerBtn" class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg transition-colors">
+                                <i class="fa fa-play mr-1"></i> 开始
+                            </button>
+                            <button id="pauseTimerBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-lg transition-colors hidden">
+                                <i class="fa fa-pause mr-1"></i> 暂停
+                            </button>
+                            <button id="resetTimerBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg transition-colors">
+                                <i class="fa fa-refresh mr-1"></i> 重置
+                            </button>
+                        </div>
+                        
+                        <!-- 模式切换 -->
+                        <div class="flex space-x-2 mt-5">
+                            <button data-mode="pomodoro" class="timer-mode-btn bg-primary/10 text-primary px-3 py-1.5 rounded-lg text-sm font-medium">
+                                专注
+                            </button>
+                            <button data-mode="shortBreak" class="timer-mode-btn bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium">
+                                短休息 <span id="shortBreakText">(5分钟)</span>
+                            </button>
+                            <button data-mode="longBreak" class="timer-mode-btn bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium">
+                                长休息 <span id="longBreakText">(15分钟)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 专注任务 -->
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+                    <h2 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fa fa-bullseye text-primary mr-2"></i>
+                        专注任务
+                    </h2>
+                    
+                    <div class="mb-4">
+                        <select id="focusTaskSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                            <option value="">-- 选择任务 --</option>
+                        </select>
+                    </div>
+                    
+                    <div id="currentFocusTask" class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <p class="text-gray-500 text-center">
+                            选择一个任务开始专注<br>或开始一个新的番茄钟
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 统计模态框 -->
+    <div id="statsModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl w-full max-w-2xl max-h-[80vh] flex flex-col animate-fade-in">
+            <div class="p-5 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-xl font-semibold">专注统计</h3>
+                <button id="closeStatsModalBtn" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto">
+                <div class="mb-6">
+                    <h4 class="font-medium mb-3">近7天专注时间</h4>
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <canvas id="weeklyChart" height="200"></canvas>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-center">
+                        <div class="text-sm text-gray-500">总专注时间</div>
+                        <div class="text-2xl font-bold" id="totalFocusTime">0分钟</div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-center">
+                        <div class="text-sm text-gray-500">完成番茄钟</div>
+                        <div class="text-2xl font-bold" id="totalPomodoros">0个</div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-center">
+                        <div class="text-sm text-gray-500">完成任务</div>
+                        <div class="text-2xl font-bold" id="totalCompletedTasks">0个</div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-5 border-t border-gray-200 flex justify-end">
+                <button id="closeStatsBtn" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                    关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置模态框 -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl w-full max-w-md max-h-[80vh] flex flex-col animate-fade-in">
+            <div class="p-5 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-xl font-semibold">设置</h3>
+                <button id="closeSettingsModalBtn" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto" id="settingsModalContent">
+                <div class="space-y-5">
+                    <div>
+                        <h4 class="font-medium mb-3">番茄钟时长设置</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">专注时长 (分钟)</label>
+                                <input type="number" id="pomodoroDuration" min="1" max="60" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">短休息时长 (分钟)</label>
+                                <input type="number" id="shortBreakDuration" min="1" max="30" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">长休息时长 (分钟)</label>
+                                <input type="number" id="longBreakDuration" min="5" max="60" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-medium mb-3">通知设置</h4>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="enableNotifications" class="w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded">
+                            <label for="enableNotifications" class="ml-2 text-sm text-gray-700">番茄钟结束时通知</label>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-medium mb-3">数据管理</h4>
+                        <div class="flex space-x-3">
+                            <button id="exportDataBtn" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm flex items-center justify-center">
+                                <i class="fa fa-download mr-1"></i> 导出数据
+                            </button>
+                            <button id="importDataBtn" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm flex items-center justify-center">
+                                <i class="fa fa-upload mr-1"></i> 导入数据
+                            </button>
+                            <input type="file" id="importDataInput" accept=".json" class="hidden">
+                        </div>
+                        <button id="clearAllDataBtn" class="w-full mt-3 px-3 py-2 border border-red-200 bg-red-50 rounded-lg text-red-700 hover:bg-red-100 transition-colors text-sm">
+                            <i class="fa fa-trash mr-1"></i> 清除所有数据
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="p-5 border-t border-gray-200 flex justify-end space-x-3">
+                <button id="cancelSettingsBtn" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                    取消
+                </button>
+                <button id="saveSettingsBtn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                    保存设置
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 完成提示框 -->
+    <div id="completionToast" class="fixed bottom-6 right-6 bg-white rounded-lg shadow-lg p-4 max-w-sm transform translate-y-20 opacity-0 transition-all duration-300 z-40 hidden">
+        <div class="flex items-start">
+            <div class="flex-shrink-0 mt-0.5">
+                <i class="fa fa-check-circle text-secondary text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-gray-900" id="toastTitle">专注时间完成！</h3>
+                <div class="mt-1 text-sm text-gray-500" id="toastMessage">
+                    休息一下，准备下一个番茄钟
+                </div>
+            </div>
+            <button id="closeToastBtn" class="ml-auto flex-shrink-0 text-gray-400 hover:text-gray-500">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // DOM元素引用
+        const elements = {
+            // 任务相关
+            newTaskInput: document.getElementById('newTaskInput'),
+            addTaskBtn: document.getElementById('addTaskBtn'),
+            taskList: document.getElementById('taskList'),
+            taskPriority: document.getElementById('taskPriority'),
+            totalTasksCount: document.getElementById('totalTasksCount'),
+            completedTasksCount: document.getElementById('completedTasksCount'),
+            activeTasksCount: document.getElementById('activeTasksCount'),
+            todayFocusTime: document.getElementById('todayFocusTime'),
+            clearCompletedBtn: document.getElementById('clearCompletedBtn'),
+            todayDate: document.getElementById('todayDate'),
+            focusTaskSelect: document.getElementById('focusTaskSelect'),
+            currentFocusTask: document.getElementById('currentFocusTask'),
+            
+            // 番茄钟相关
+            timerDisplay: document.getElementById('timerDisplay'),
+            timerLabel: document.getElementById('timerLabel'),
+            startTimerBtn: document.getElementById('startTimerBtn'),
+            pauseTimerBtn: document.getElementById('pauseTimerBtn'),
+            resetTimerBtn: document.getElementById('resetTimerBtn'),
+            timerProgress: document.getElementById('timerProgress'),
+            timerModeBtns: document.querySelectorAll('.timer-mode-btn'),
+            pomodoroIndicators: [
+                document.getElementById('pomodoro1'),
+                document.getElementById('pomodoro2'),
+                document.getElementById('pomodoro3'),
+                document.getElementById('pomodoro4')
+            ],
+            shortBreakText: document.getElementById('shortBreakText'),
+            longBreakText: document.getElementById('longBreakText'),
+            
+            // 模态框相关
+            statsBtn: document.getElementById('statsBtn'),
+            statsModal: document.getElementById('statsModal'),
+            closeStatsModalBtn: document.getElementById('closeStatsModalBtn'),
+            closeStatsBtn: document.getElementById('closeStatsBtn'),
+            settingsBtn: document.getElementById('settingsBtn'),
+            settingsModal: document.getElementById('settingsModal'),
+            closeSettingsModalBtn: document.getElementById('closeSettingsModalBtn'),
+            cancelSettingsBtn: document.getElementById('cancelSettingsBtn'),
+            saveSettingsBtn: document.getElementById('saveSettingsBtn'),
+            themeToggle: document.getElementById('themeToggle'),
+            
+            // 设置表单
+            pomodoroDuration: document.getElementById('pomodoroDuration'),
+            shortBreakDuration: document.getElementById('shortBreakDuration'),
+            longBreakDuration: document.getElementById('longBreakDuration'),
+            enableNotifications: document.getElementById('enableNotifications'),
+            exportDataBtn: document.getElementById('exportDataBtn'),
+            importDataBtn: document.getElementById('importDataBtn'),
+            importDataInput: document.getElementById('importDataInput'),
+            clearAllDataBtn: document.getElementById('clearAllDataBtn'),
+            
+            // 提示框
+            completionToast: document.getElementById('completionToast'),
+            toastTitle: document.getElementById('toastTitle'),
+            toastMessage: document.getElementById('toastMessage'),
+            closeToastBtn: document.getElementById('closeToastBtn')
+        };
+
+        // 应用状态
+        const state = {
+            tasks: [],
+            timer: {
+                mode: 'pomodoro', // pomodoro, shortBreak, longBreak
+                timeLeft: 25 * 60,
+                totalTime: 25 * 60,
+                isRunning: false,
+                interval: null,
+                completedPomodoros: 0
+            },
+            settings: {
+                pomodoroDuration: 25,
+                shortBreakDuration: 5,
+                longBreakDuration: 15,
+                enableNotifications: true,
+                theme: 'light'
+            },
+            stats: {
+                dailyFocus: {}, // {date: seconds}
+                totalPomodoros: 0,
+                totalCompletedTasks: 0
+            },
+            currentFocusTaskId: null
+        };
+        
+    
+        // 初始化应用
+        function init() {
+            // 加载数据
+            loadData();
+            
+            // 设置当前日期
+            const now = new Date();
+            elements.todayDate.textContent = now.toLocaleDateString('zh-CN', { 
+                month: 'long', 
+                day: 'numeric', 
+                weekday: 'long' 
+            });
+            
+            // 渲染任务列表
+            renderTasks();
+            
+            // 更新任务统计
+            updateTaskStats();
+            
+            // 更新计时器显示
+            updateTimerDisplay();
+            
+            // 初始化设置表单
+            initSettingsForm();
+            
+            // 初始化图表
+            initCharts();
+            
+            // 绑定事件监听
+            bindEvents();
+            
+            // 请求通知权限
+            if (state.settings.enableNotifications && Notification.permission !== 'granted') {
+                Notification.requestPermission();
+            }
+        }
+    
+        // 从localStorage加载数据
+        function loadData() {
+            const savedTasks = localStorage.getItem('todoTasks');
+            const savedTimer = localStorage.getItem('todoTimer');
+            const savedSettings = localStorage.getItem('todoSettings');
+            const savedStats = localStorage.getItem('todoStats');
+            const savedCurrentTask = localStorage.getItem('currentFocusTaskId');
+            
+            if (savedTasks) {
+                state.tasks = JSON.parse(savedTasks);
+            }
+            
+            if (savedSettings) {
+                state.settings = { ...state.settings, ...JSON.parse(savedSettings) };
+                applySettings();
+            }
+            
+            if (savedStats) {
+                state.stats = { ...state.stats, ...JSON.parse(savedStats) };
+                updateFocusStatsDisplay();
+            }
+            
+            if (savedCurrentTask) {
+                state.currentFocusTaskId = savedCurrentTask;
+                updateCurrentFocusTaskDisplay();
+            }
+            
+            // 初始化计时器基于设置
+            resetTimer(state.timer.mode);
+        }
+    
+        // 保存数据到localStorage
+        function saveData() {
+            localStorage.setItem('todoTasks', JSON.stringify(state.tasks));
+            localStorage.setItem('todoSettings', JSON.stringify(state.settings));
+            localStorage.setItem('todoStats', JSON.stringify(state.stats));
+            
+            if (state.currentFocusTaskId) {
+                localStorage.setItem('currentFocusTaskId', state.currentFocusTaskId);
+            } else {
+                localStorage.removeItem('currentFocusTaskId');
+            }
+        }
+    
+        // 应用设置
+        function applySettings() {
+            // 设置计时器时长
+            elements.pomodoroDuration.value = state.settings.pomodoroDuration;
+            elements.shortBreakDuration.value = state.settings.shortBreakDuration;
+            elements.longBreakDuration.value = state.settings.longBreakDuration;
+            elements.enableNotifications.checked = state.settings.enableNotifications;
+            
+            // 更新休息按钮显示的时间
+            elements.shortBreakText.textContent = `(${state.settings.shortBreakDuration}分钟)`;
+            elements.longBreakText.textContent = `(${state.settings.longBreakDuration}分钟)`;
+            
+            // 应用主题
+            if (state.settings.theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                elements.themeToggle.innerHTML = '<i class="fa fa-sun-o text-gray-600"></i>';
+            } else {
+                document.documentElement.classList.remove('dark');
+                elements.themeToggle.innerHTML = '<i class="fa fa-moon-o text-gray-600"></i>';
+            }
+            
+            // 重置计时器
+            resetTimer(state.timer.mode);
+        }
+    
+        // 渲染任务列表
+        function renderTasks() {
+            if (state.tasks.length === 0) {
+                elements.taskList.innerHTML = `
+                    <div class="text-center text-gray-500 py-12 border-2 border-dashed border-gray-200 rounded-lg">
+                        <i class="fa fa-check-square-o text-4xl mb-3 opacity-30"></i>
+                        <p>还没有任务，添加你的第一个任务吧！</p>
+                    </div>
+                `;
+                elements.focusTaskSelect.innerHTML = '<option value="">-- 选择任务 --</option>';
+                return;
+            }
+            
+            // 清空任务列表
+            elements.taskList.innerHTML = '';
+            
+            // 清空选择框
+            elements.focusTaskSelect.innerHTML = '<option value="">-- 选择任务 --</option>';
+            
+            // 添加任务
+            state.tasks.forEach(task => {
+                // 创建任务项
+                const taskEl = document.createElement('div');
+                taskEl.className = `flex items-center p-3 rounded-lg border border-gray-200 task-enter ${task.completed ? 'bg-green-50' : ''} task-list-item`;
+                taskEl.dataset.id = task.id;
+                
+                // 设置优先级样式（修复：补充低优先级图标）
+                let priorityIcon = '';
+                if (task.priority === 'high') {
+                    priorityIcon = '<i class="fa fa-flag text-danger mr-2"></i>';
+                } else if (task.priority === 'medium') {
+                    priorityIcon = '<i class="fa fa-flag text-accent mr-2"></i>';
+                } else {
+                    priorityIcon = '<i class="fa fa-flag-o text-gray-400 mr-2"></i>'; // 低优先级图标
+                }
+                
+                // 构建任务HTML
+                taskEl.innerHTML = `
+                    <div class="mr-3">
+                        <input type="checkbox" ${task.completed ? 'checked' : ''} class="w-5 h-5 rounded text-primary focus:ring-primary">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="${task.completed ? 'line-through text-gray-500' : ''}">
+                            ${priorityIcon}
+                            <span>${task.title}</span>
+                        </div>
+                        ${task.notes ? `<div class="text-sm text-gray-500 mt-1">${task.notes}</div>` : ''}
+                        ${task.focusTime > 0 ? `
+                            <div class="text-xs text-gray-400 mt-1">
+                                <i class="fa fa-clock-o mr-1"></i>
+                                已专注: ${formatSeconds(task.focusTime)}
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="ml-2 flex items-center space-x-1">
+                        <button class="edit-task p-1.5 text-gray-500 hover:text-primary rounded-full hover:bg-primary/10 transition-colors">
+                            <i class="fa fa-pencil"></i>
+                        </button>
+                        <button class="delete-task p-1.5 text-gray-500 hover:text-danger rounded-full hover:bg-danger/10 transition-colors">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                // 添加到列表
+                elements.taskList.appendChild(taskEl);
+                
+                // 添加到选择框（未完成的任务）
+                if (!task.completed) {
+                    const option = document.createElement('option');
+                    option.value = task.id;
+                    option.textContent = task.title;
+                    elements.focusTaskSelect.appendChild(option);
+                }
+                
+                // 绑定复选框事件
+                const checkbox = taskEl.querySelector('input[type="checkbox"]');
+                checkbox.addEventListener('change', () => {
+                    toggleTaskCompletion(task.id);
+                });
+            });
+            
+            // 绑定编辑和删除事件
+            document.querySelectorAll('.edit-task').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const taskId = e.currentTarget.closest('.task-list-item').dataset.id;
+                    editTask(taskId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-task').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const taskId = e.currentTarget.closest('.task-list-item').dataset.id;
+                    deleteTask(taskId);
+                });
+            });
+        }
+    
+        // 添加新任务
+        function addTask(title, priority = 'low', notes = '') {
+            if (!title.trim()) return;
+            
+            const newTask = {
+                id: Date.now().toString(),
+                title: title.trim(),
+                priority,
+                notes: notes.trim(),
+                completed: false,
+                createdAt: new Date().toISOString(),
+                completedAt: null,
+                focusTime: 0 // 专注时间（秒）
+            };
+            
+            state.tasks.unshift(newTask);
+            saveData();
+            renderTasks();
+            updateTaskStats();
+            
+            // 添加成功动画
+            const firstTask = elements.taskList.querySelector('.task-list-item');
+            if (firstTask) {
+                firstTask.classList.add('bg-blue-50');
+                setTimeout(() => {
+                    firstTask.classList.remove('bg-blue-50');
+                }, 1000);
+            }
+            
+            // 清空输入框
+            elements.newTaskInput.value = '';
+        }
+    
+        // 切换任务完成状态（打勾功能）
+        function toggleTaskCompletion(taskId) {
+            const task = state.tasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            task.completed = !task.completed;
+            
+            if (task.completed) {
+                task.completedAt = new Date().toISOString();
+                // 如果是当前专注任务，则取消关联
+                if (state.currentFocusTaskId === taskId) {
+                    state.currentFocusTaskId = null;
+                    updateCurrentFocusTaskDisplay();
+                }
+                // 添加到统计
+                state.stats.totalCompletedTasks++;
+            }
+            
+            saveData();
+            renderTasks();
+            updateTaskStats();
+            
+            // 添加完成动画
+            const taskEl = document.querySelector(`.task-list-item[data-id="${taskId}"]`);
+            if (taskEl) {
+                taskEl.classList.add('task-complete');
+                setTimeout(() => {
+                    taskEl.classList.remove('task-complete');
+                }, 500);
+            }
+        }
+    
+        // 编辑任务
+        function editTask(taskId) {
+            const task = state.tasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            const newTitle = prompt('编辑任务', task.title);
+            if (newTitle === null) return; // 用户取消
+            
+            if (newTitle.trim()) {
+                task.title = newTitle.trim();
+                saveData();
+                renderTasks();
+            }
+        }
+    
+        // 删除任务
+        function deleteTask(taskId) {
+            if (!confirm('确定要删除这个任务吗？')) return;
+            
+            // 如果是当前专注任务，则取消关联
+            if (state.currentFocusTaskId === taskId) {
+                state.currentFocusTaskId = null;
+                updateCurrentFocusTaskDisplay();
+            }
+            
+            state.tasks = state.tasks.filter(t => t.id !== taskId);
+            saveData();
+            renderTasks();
+            updateTaskStats();
+        }
+    
+        // 清除已完成任务
+        function clearCompletedTasks() {
+            const completedCount = state.tasks.filter(t => t.completed).length;
+            if (completedCount === 0) {
+                showToast('提示', '没有已完成的任务');
+                return;
+            }
+            
+            if (confirm(`确定要清除所有${completedCount}个已完成的任务吗？`)) {
+                state.tasks = state.tasks.filter(t => !t.completed);
+                saveData();
+                renderTasks();
+                updateTaskStats();
+                showToast('操作成功', `已清除${completedCount}个已完成任务`);
+            }
+        }
+    
+        // 更新任务统计
+        function updateTaskStats() {
+            const total = state.tasks.length;
+            const completed = state.tasks.filter(t => t.completed).length;
+            const active = total - completed;
+            
+            elements.totalTasksCount.textContent = total;
+            elements.completedTasksCount.textContent = completed;
+            elements.activeTasksCount.textContent = active;
+            
+            // 计算今日专注时间
+            const today = new Date().toISOString().split('T')[0];
+            const todaySeconds = state.stats.dailyFocus[today] || 0;
+            const hours = Math.floor(todaySeconds / 3600);
+            const minutes = Math.floor((todaySeconds % 3600) / 60);
+            
+            if (hours > 0) {
+                elements.todayFocusTime.textContent = `${hours}小时${minutes > 0 ? minutes + '分' : ''}`;
+            } else {
+                elements.todayFocusTime.textContent = `${minutes}分钟`;
+            }
+        }
+    
+        // 更新当前专注任务显示
+        function updateCurrentFocusTaskDisplay() {
+            if (!state.currentFocusTaskId) {
+                elements.currentFocusTask.innerHTML = `
+                    <p class="text-gray-500 text-center">
+                        选择一个任务开始专注<br>或开始一个新的番茄钟
+                    </p>
+                `;
+                return;
+            }
+            
+            const task = state.tasks.find(t => t.id === state.currentFocusTaskId);
+            if (task) {
+                elements.currentFocusTask.innerHTML = `
+                    <div>
+                        <h4 class="font-medium">${task.title}</h4>
+                        <div class="mt-2 text-sm text-gray-500">
+                            <div class="flex items-center">
+                                <i class="fa fa-clock-o mr-1"></i>
+                                <span>已专注: ${formatSeconds(task.focusTime)}</span>
+                            </div>
+                        </div>
+                        <button id="clearFocusTaskBtn" class="mt-3 text-sm text-gray-500 hover:text-danger">
+                            <i class="fa fa-times mr-1"></i> 取消关联
+                        </button>
+                    </div>
+                `;
+                
+                // 绑定取消关联事件
+                document.getElementById('clearFocusTaskBtn').addEventListener('click', () => {
+                    state.currentFocusTaskId = null;
+                    saveData();
+                    updateCurrentFocusTaskDisplay();
+                });
+            }
+        }
+    
+        // 设置专注任务
+        function setFocusTask(taskId) {
+            state.currentFocusTaskId = taskId || null;
+            saveData();
+            updateCurrentFocusTaskDisplay();
+        }
+    
+        // 开始计时器
+        function startTimer() {
+            if (state.timer.isRunning) return;
+            
+            state.timer.isRunning = true;
+            elements.startTimerBtn.classList.add('hidden');
+            elements.pauseTimerBtn.classList.remove('hidden');
+            
+            state.timer.interval = setInterval(() => {
+                if (state.timer.timeLeft > 0) {
+                    state.timer.timeLeft--;
+                    
+                    // 如果有当前专注任务且是专注模式，累计专注时间
+                    if (state.currentFocusTaskId && state.timer.mode === 'pomodoro') {
+                        const task = state.tasks.find(t => t.id === state.currentFocusTaskId);
+                        if (task) {
+                            task.focusTime++;
+                        }
+                    }
+                    
+                    updateTimerDisplay();
+                    updateTimerProgress();
+                } else {
+                    completeTimer();
+                }
+            }, 1000);
+        }
+    
+        // 暂停计时器
+        function pauseTimer() {
+            if (!state.timer.isRunning) return;
+            
+            state.timer.isRunning = false;
+            clearInterval(state.timer.interval);
+            elements.startTimerBtn.classList.remove('hidden');
+            elements.pauseTimerBtn.classList.add('hidden');
+            
+            // 保存数据（包括可能累计的专注时间）
+            saveData();
+        }
+    
+        // 重置计时器
+        function resetTimer(mode) {
+            pauseTimer();
+            
+            // 更新模式
+            state.timer.mode = mode;
+            
+            // 更新模式按钮样式
+            elements.timerModeBtns.forEach(btn => {
+                if (btn.dataset.mode === mode) {
+                    btn.classList.remove('bg-gray-100', 'hover:bg-gray-200', 'text-gray-700');
+                    btn.classList.add('bg-primary/10', 'text-primary');
+                } else {
+                    btn.classList.remove('bg-primary/10', 'text-primary');
+                    btn.classList.add('bg-gray-100', 'hover:bg-gray-200', 'text-gray-700');
+                }
+            });
+            
+            // 设置计时器时间（基于设置）
+            switch (state.timer.mode) {
+                case 'pomodoro':
+                    state.timer.totalTime = state.settings.pomodoroDuration * 60;
+                    elements.timerLabel.textContent = '点击开始专注';
+                    break;
+                case 'shortBreak':
+                    state.timer.totalTime = state.settings.shortBreakDuration * 60;
+                    elements.timerLabel.textContent = '点击开始休息';
+                    break;
+                case 'longBreak':
+                    state.timer.totalTime = state.settings.longBreakDuration * 60;
+                    elements.timerLabel.textContent = '点击开始休息';
+                    break;
+            }
+            
+            state.timer.timeLeft = state.timer.totalTime;
+            
+            // 更新显示
+            updateTimerDisplay();
+            updateTimerProgress();
+        }
+    
+        function completeTimer() {
+            // 停止计时器
+            pauseTimer();
+            
+            // 记录统计数据
+            const today = new Date().toISOString().split('T')[0];
+            
+            if (state.timer.mode === 'pomodoro') {
+                // 完成一个番茄钟
+                state.stats.totalPomodoros++;
+                state.timer.completedPomodoros++;
+                updatePomodorosDisplay();
+                
+                // 记录今日专注时间
+                state.stats.dailyFocus[today] = (state.stats.dailyFocus[today] || 0) + state.timer.totalTime;
+                
+                showToast('专注完成', '很棒！该休息一下了');
+                
+                // 4个番茄钟后提示长休息
+                if (state.timer.completedPomodoros % 4 === 0) {
+                    resetTimer('longBreak');
+                } else {
+                    resetTimer('shortBreak');
+                }
+            } else {
+                // 休息结束，开始下一个番茄钟
+                showToast('休息结束', '准备好开始下一个专注时段了吗？');
+                resetTimer('pomodoro');
+            }
+            
+            // 保存数据并更新显示
+            saveData();
+            updateTaskStats();
+            updateFocusStatsDisplay();
+            updateChart();
+        }
+    
+        function updateTimerDisplay() {
+            const minutes = Math.floor(state.timer.timeLeft / 60);
+            const seconds = state.timer.timeLeft % 60;
+            elements.timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+    
+        function updateTimerProgress() {
+            const circumference = 2 * Math.PI * 90; // 圆周长（半径90）
+            const offset = circumference - (state.timer.timeLeft / state.timer.totalTime) * circumference;
+            elements.timerProgress.style.strokeDasharray = circumference;
+            elements.timerProgress.style.strokeDashoffset = offset;
+        }
+    
+        function updatePomodorosDisplay() {
+            // 重置所有指示器
+            elements.pomodoroIndicators.forEach((indicator, index) => {
+                if (index < state.timer.completedPomodoros % 4) {
+                    indicator.classList.remove('bg-gray-200');
+                    indicator.classList.add('bg-accent');
+                } else {
+                    indicator.classList.remove('bg-accent');
+                    indicator.classList.add('bg-gray-200');
+                }
+            });
+        }
+    
+        // 显示提示框
+        function showToast(title, message) {
+            elements.toastTitle.textContent = title;
+            elements.toastMessage.textContent = message;
+            elements.completionToast.classList.remove('hidden', 'translate-y-20', 'opacity-0');
+            
+            // 自动关闭
+            setTimeout(hideToast, 3000);
+            
+            // 发送通知
+            if (state.settings.enableNotifications && Notification.permission === 'granted') {
+                new Notification(title, { body: message });
+            }
+        }
+    
+        // 隐藏提示框
+        function hideToast() {
+            elements.completionToast.classList.add('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                elements.completionToast.classList.add('hidden');
+            }, 300);
+        }
+    
+        // 格式化秒数为时分秒
+        function formatSeconds(seconds) {
+            if (seconds < 60) {
+                return `${seconds}秒`;
+            } else if (seconds < 3600) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}分${secs > 0 ? secs + '秒' : ''}`;
+            } else {
+                const hours = Math.floor(seconds / 3600);
+                const mins = Math.floor((seconds % 3600) / 60);
+                return `${hours}小时${mins > 0 ? mins + '分' : ''}`;
+            }
+        }
+    
+        // 初始化设置表单
+        function initSettingsForm() {
+            elements.pomodoroDuration.value = state.settings.pomodoroDuration;
+            elements.shortBreakDuration.value = state.settings.shortBreakDuration;
+            elements.longBreakDuration.value = state.settings.longBreakDuration;
+            elements.enableNotifications.checked = state.settings.enableNotifications;
+        }
+    
+        // 保存设置
+        function saveSettings() {
+            const pomodoro = parseInt(elements.pomodoroDuration.value) || 25;
+            const shortBreak = parseInt(elements.shortBreakDuration.value) || 5;
+            const longBreak = parseInt(elements.longBreakDuration.value) || 15;
+            
+            state.settings = {
+                ...state.settings,
+                pomodoroDuration: pomodoro,
+                shortBreakDuration: shortBreak,
+                longBreakDuration: longBreak,
+                enableNotifications: elements.enableNotifications.checked
+            };
+            
+            saveData();
+            applySettings();
+            elements.settingsModal.classList.add('hidden');
+            showToast('设置已保存', '新的设置已生效');
+        }
+    
+        // 导出数据
+        function exportData() {
+            const data = {
+                tasks: state.tasks,
+                stats: state.stats,
+                settings: state.settings
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `focusflow-data-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('数据导出成功', '数据已保存为JSON文件');
+        }
+    
+        // 导入数据
+        function importData(file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    
+                    if (data.tasks && data.stats && data.settings) {
+                        state.tasks = data.tasks;
+                        state.stats = data.stats;
+                        state.settings = data.settings;
+                        
+                        // 重置当前专注任务
+                        state.currentFocusTaskId = null;
+                        
+                        saveData();
+                        applySettings();
+                        renderTasks();
+                        updateTaskStats();
+                        updateFocusStatsDisplay();
+                        updateChart();
+                        
+                        showToast('数据导入成功', '已加载导入的数据');
+                    } else {
+                        showToast('导入失败', '无效的数据格式');
+                    }
+                } catch (error) {
+                    console.error('导入错误:', error);
+                    showToast('导入失败', '文件格式不正确');
+                }
+            };
+            reader.readAsText(file);
+        }
+    
+        // 清除所有数据
+        function clearAllData() {
+            if (confirm('确定要清除所有数据吗？此操作不可恢复！')) {
+                // 重置状态
+                state.tasks = [];
+                state.timer.completedPomodoros = 0;
+                state.stats = {
+                    dailyFocus: {},
+                    totalPomodoros: 0,
+                    totalCompletedTasks: 0
+                };
+                state.currentFocusTaskId = null;
+                
+                // 更新番茄钟指示器
+                updatePomodorosDisplay();
+                
+                // 保存并刷新
+                saveData();
+                renderTasks();
+                updateTaskStats();
+                updateFocusStatsDisplay();
+                updateChart();
+                
+                elements.settingsModal.classList.add('hidden');
+                showToast('数据已清除', '所有数据已重置为初始状态');
+            }
+        }
+    
+        // 初始化图表
+        let weeklyChart;
+        function initCharts() {
+            const ctx = document.getElementById('weeklyChart').getContext('2d');
+            
+            // 准备过去7天的数据
+            const labels = [];
+            const data = [];
+            
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                const dayName = date.toLocaleDateString('zh-CN', { weekday: 'short' });
+                
+                labels.push(dayName);
+                data.push(Math.floor((state.stats.dailyFocus[dateStr] || 0) / 60)); // 转换为分钟
+            }
+            
+            weeklyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '专注时间（分钟）',
+                        data: data,
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    
+        // 更新图表
+        function updateChart() {
+            if (!weeklyChart) return;
+            
+            const data = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                
+                data.push(Math.floor((state.stats.dailyFocus[dateStr] || 0) / 60)); // 转换为分钟
+            }
+            
+            weeklyChart.data.datasets[0].data = data;
+            weeklyChart.update();
+        }
+    
+        // 更新专注统计显示
+        function updateFocusStatsDisplay() {
+            // 计算总专注时间（小时）
+            let totalSeconds = 0;
+            Object.values(state.stats.dailyFocus).forEach(seconds => {
+                totalSeconds += seconds;
+            });
+            const totalHours = Math.floor(totalSeconds / 3600);
+            const totalMinutes = Math.floor((totalSeconds % 3600) / 60);
+            
+            let totalTimeText = '';
+            if (totalHours > 0) {
+                totalTimeText = `${totalHours}小时${totalMinutes > 0 ? totalMinutes + '分' : ''}`;
+            } else {
+                totalTimeText = `${totalMinutes}分钟`;
+            }
+            
+            // 更新统计模态框
+            document.getElementById('totalFocusTime').textContent = totalTimeText;
+            document.getElementById('totalPomodoros').textContent = state.stats.totalPomodoros + '个';
+            document.getElementById('totalCompletedTasks').textContent = state.stats.totalCompletedTasks + '个';
+        }
+    
+        // 切换主题
+        function toggleTheme() {
+            state.settings.theme = state.settings.theme === 'light' ? 'dark' : 'light';
+            saveData();
+            applySettings();
+        }
+    
+        // 绑定所有事件
+        function bindEvents() {
+            // 任务相关
+            elements.addTaskBtn.addEventListener('click', () => {
+                addTask(elements.newTaskInput.value, elements.taskPriority.value);
+            });
+            
+            elements.newTaskInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addTask(elements.newTaskInput.value, elements.taskPriority.value);
+                }
+            });
+            
+            elements.clearCompletedBtn.addEventListener('click', clearCompletedTasks);
+            
+            // 番茄钟相关
+            elements.startTimerBtn.addEventListener('click', startTimer);
+            elements.pauseTimerBtn.addEventListener('click', pauseTimer);
+            elements.resetTimerBtn.addEventListener('click', () => resetTimer(state.timer.mode));
+            
+            elements.timerModeBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    resetTimer(btn.dataset.mode);
+                });
+            });
+            
+            // 专注任务选择
+            elements.focusTaskSelect.addEventListener('change', (e) => {
+                setFocusTask(e.target.value);
+            });
+            
+            // 模态框相关
+            elements.statsBtn.addEventListener('click', () => {
+                elements.statsModal.classList.remove('hidden');
+                updateChart();
+            });
+            
+            elements.closeStatsModalBtn.addEventListener('click', () => {
+                elements.statsModal.classList.add('hidden');
+            });
+            
+            elements.closeStatsBtn.addEventListener('click', () => {
+                elements.statsModal.classList.add('hidden');
+            });
+            
+            elements.settingsBtn.addEventListener('click', () => {
+                elements.settingsModal.classList.remove('hidden');
+            });
+            
+            elements.closeSettingsModalBtn.addEventListener('click', () => {
+                elements.settingsModal.classList.add('hidden');
+            });
+            
+            elements.cancelSettingsBtn.addEventListener('click', () => {
+                elements.settingsModal.classList.add('hidden');
+            });
+            
+            elements.saveSettingsBtn.addEventListener('click', saveSettings);
+            
+            // 主题切换
+            elements.themeToggle.addEventListener('click', toggleTheme);
+            
+            // 提示框关闭
+            elements.closeToastBtn.addEventListener('click', hideToast);
+            
+            // 数据管理
+            elements.exportDataBtn.addEventListener('click', exportData);
+            
+            elements.importDataBtn.addEventListener('click', () => {
+                elements.importDataInput.click();
+            });
+            
+            elements.importDataInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    importData(file);
+                    // 重置输入
+                    e.target.value = '';
+                }
+            });
+            
+            elements.clearAllDataBtn.addEventListener('click', clearAllData);
+        }
+    
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', init);
+
+        
+    </script>
+</body>
+</html>

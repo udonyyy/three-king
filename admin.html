@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网站管理后台</title>
+    <!-- 引入外部资源 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+    <!-- Tailwind配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        accent: '#8B5CF6',
+                        danger: '#EF4444',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .transition-height {
+                transition: max-height 0.3s ease-in-out;
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+            }
+            .btn-primary {
+                @apply bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-all;
+            }
+            .btn-secondary {
+                @apply bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary/90 transition-all;
+            }
+            .btn-danger {
+                @apply bg-danger text-white px-4 py-2 rounded-lg hover:bg-danger/90 transition-all;
+            }
+            .btn-accent {
+                @apply bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition-all;
+            }
+            .btn-outline {
+                @apply border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-all;
+            }
+            .input-field {
+                @apply w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50;
+            }
+            .sidebar-item-active {
+                @apply bg-primary/10 text-primary border-l-4 border-primary;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-dark min-h-screen flex flex-col">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-md fixed w-full top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <!-- 新增Three King图标，点击返回主页 -->
+            <a href="index.html" class="mr-4">
+                <i class="fa fa-shield text-2xl text-primary"></i>
+            </a>
+            <a href="index.html" class="flex items-center space-x-2 text-xl font-bold text-primary hover:text-primary/80 transition-colors">
+                <i class="fa fa-shield"></i>
+                <span>Three King 管理后台</span>
+            </a>
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <button id="notificationBtn" class="p-2 rounded-full hover:bg-gray-100 transition-colors relative">
+                        <i class="fa fa-bell text-gray-600"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-danger rounded-full"></span>
+                    </button>
+                    <div id="notificationDropdown" class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg py-2 hidden z-50">
+                        <div class="px-4 py-2 border-b"><h3 class="font-bold">通知</h3></div>
+                        <div class="max-h-60 overflow-y-auto">
+                            <div class="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-start space-x-3">
+                                <div class="bg-primary/10 p-2 rounded-full"><i class="fa fa-file-text-o text-primary"></i></div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium">有新的学习笔记需要审批</p>
+                                    <p class="text-xs text-gray-500">10分钟前</p>
+                                </div>
+                            </div>
+                            <div class="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-start space-x-3">
+                                <div class="bg-danger/10 p-2 rounded-full"><i class="fa fa-trash text-danger"></i></div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium">有内容被删除，需要审批</p>
+                                    <p class="text-xs text-gray-500">1小时前</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-4 py-2 border-t text-center"><a href="#" class="text-sm text-primary hover:underline">查看全部</a></div>
+                    </div>
+                </div>
+                <div class="relative">
+                    <button id="userMenuBtn" class="flex items-center space-x-2 focus:outline-none">
+                        <img src="https://picsum.photos/id/1005/40/40" alt="用户头像" class="w-8 h-8 rounded-full object-cover">
+                        <span id="currentUserName" class="hidden md:inline-block text-sm font-medium">管理员</span>
+                        <i class="fa fa-caret-down text-gray-500"></i>
+                    </button>
+                    <div id="userDropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 hidden z-50">
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i class="fa fa-user mr-2"></i>个人资料</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i class="fa fa-cog mr-2"></i>设置</a>
+                        <div class="border-t my-1"></div>
+                        <a href="#" id="logoutBtn" class="block px-4 py-2 text-sm text-danger hover:bg-gray-100"><i class="fa fa-sign-out mr-2"></i>退出登录</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容区 -->
+    <div class="flex flex-1 pt-16">
+        <!-- 侧边栏 -->
+        <aside id="sidebar" class="fixed top-16 left-0 bottom-0 w-64 bg-white shadow-md z-40 transform transition-transform duration-300 lg:translate-x-0 -translate-x-full">
+            <div class="p-4 border-b">
+                <div class="relative">
+                    <input type="text" placeholder="搜索..." class="w-full p-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm">
+                    <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                </div>
+            </div>
+            <nav class="p-4">
+                <ul class="space-y-1">
+                    <li>
+                        <a href="#dashboard" class="sidebar-item-active flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors">
+                            <i class="fa fa-tachometer w-5 text-center mr-3"></i>
+                            <span>仪表盘</span>
+                        </a>
+                    </li>
+                    <li>
+                        <button class="sidebar-dropdown-btn w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center">
+                                <i class="fa fa-file-text-o w-5 text-center mr-3"></i>
+                                <span>学习管理</span>
+                            </div>
+                            <i class="fa fa-caret-down text-gray-500 transition-transform duration-200"></i>
+                        </button>
+                        <ul class="sidebar-dropdown pl-10 mt-1 space-y-1 hidden">
+                            <li><a href="#study-notes" class="block px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">学习笔记</a></li>
+                            <li><a href="#skill-progress" class="block px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">技能进度</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <button class="sidebar-dropdown-btn w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center">
+                                <i class="fa fa-list-ul w-5 text-center mr-3"></i>
+                                <span>任务管理</span>
+                            </div>
+                            <i class="fa fa-caret-down text-gray-500 transition-transform duration-200"></i>
+                        </button>
+                        <ul class="sidebar-dropdown pl-10 mt-1 space-y-1 hidden">
+                            <li><a href="#todos" class="block px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">待办事项</a></li>
+                            <li><a href="#pomodoro" class="block px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">番茄钟统计</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="#users" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fa fa-users w-5 text-center mr-3"></i>
+                            <span>用户管理</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#revisions" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fa fa-history w-5 text-center mr-3"></i>
+                            <span>修订历史</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#approvals" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fa fa-check-circle w-5 text-center mr-3"></i>
+                            <span>审批中心</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#settings" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fa fa-cog w-5 text-center mr-3"></i>
+                            <span>系统设置</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- 移动端侧边栏切换按钮 -->
+        <button id="sidebarToggle" class="fixed bottom-4 left-4 lg:hidden bg-primary text-white p-3 rounded-full shadow-lg z-50">
+            <i class="fa fa-bars"></i>
+        </button>
+
+        <!-- 主内容 -->
+        <main class="flex-1 ml-0 lg:ml-64 p-6 transition-all duration-300" id="main-content">
+            <div class="mb-6 flex justify-between items-center flex-wrap gap-4">
+                <h1 class="text-2xl font-bold text-dark">仪表盘</h1>
+                <div class="flex space-x-3">
+                    <button class="btn-primary flex items-center"><i class="fa fa-plus mr-2"></i>新建内容</button>
+                    <button class="btn-outline flex items-center"><i class="fa fa-filter mr-2"></i>筛选</button>
+                </div>
+            </div>
+
+            <!-- 数据概览卡片 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 card-hover">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-medium text-gray-500">总用户数</h3>
+                        <div class="bg-blue-50 p-2 rounded-lg"><i class="fa fa-users text-primary"></i></div>
+                    </div>
+                    <p class="text-2xl font-bold text-dark" id="totalUsers">0</p>
+                    <p class="text-xs text-green-500 flex items-center mt-1"><i class="fa fa-arrow-up mr-1"></i>12.5% 较上月</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 card-hover">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-medium text-gray-500">学习笔记数</h3>
+                        <div class="bg-green-50 p-2 rounded-lg"><i class="fa fa-book text-secondary"></i></div>
+                    </div>
+                    <p class="text-2xl font-bold text-dark" id="totalNotes">0</p>
+                    <p class="text-xs text-green-500 flex items-center mt-1"><i class="fa fa-arrow-up mr-1"></i>8.2% 较上月</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 card-hover">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-medium text-gray-500">待办事项数</h3>
+                        <div class="bg-purple-50 p-2 rounded-lg"><i class="fa fa-list-alt text-accent"></i></div>
+                    </div>
+                    <p class="text-2xl font-bold text-dark" id="totalTodos">0</p>
+                    <p class="text-xs text-red-500 flex items-center mt-1"><i class="fa fa-arrow-down mr-1"></i>3.1% 较上月</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 card-hover">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-medium text-gray-500">待审批项</h3>
+                        <div class="bg-amber-50 p-2 rounded-lg"><i class="fa fa-clock-o text-amber-500"></i></div>
+                    </div>
+                    <p class="text-2xl font-bold text-dark" id="pendingApprovals">0</p>
+                    <p class="text-xs text-green-500 flex items-center mt-1"><i class="fa fa-arrow-up mr-1"></i>5.3% 较上月</p>
+                </div>
+            </div>
+
+            <!-- 图表区域 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+                    <h3 class="text-lg font-bold mb-4">内容增长趋势</h3>
+                    <div class="h-64"><canvas id="contentGrowthChart"></canvas></div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+                    <h3 class="text-lg font-bold mb-4">用户活动分布</h3>
+                    <div class="h-64"><canvas id="userActivityChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- 最近修订记录 -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 mb-8">
+                <div class="p-5 border-b flex justify-between items-center">
+                    <h3 class="text-lg font-bold">最近修订记录</h3>
+                    <a href="#revisions" class="text-sm text-primary hover:underline">查看全部</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">文档类型</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">作者</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">时间</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="recentRevisionsTableBody">
+                            <!-- 数据将通过JavaScript动态加载 -->
+                            <tr>
+                                <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                                    <i class="fa fa-spinner fa-spin text-xl mb-2"></i>
+                                    <p>加载中...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 待审批项 -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                <div class="p-5 border-b flex justify-between items-center">
+                    <h3 class="text-lg font-bold">待审批项</h3>
+                    <a href="#approvals" class="text-sm text-primary hover:underline">查看全部</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">文档类型</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">申请人</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">申请时间</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="pendingApprovalsTableBody">
+                            <!-- 数据将通过JavaScript动态加载 -->
+                            <tr>
+                                <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                    <i class="fa fa-spinner fa-spin text-xl mb-2"></i>
+                                    <p>加载中...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 侧边栏切换
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+        });
+
+        // 侧边栏下拉菜单
+        const sidebarDropdownBtns = document.querySelectorAll('.sidebar-dropdown-btn');
+
+        sidebarDropdownBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const dropdown = btn.nextElementSibling;
+                const icon = btn.querySelector('.fa-caret-down');
+
+                dropdown.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+            });
+        });
+
+        // 用户下拉菜单
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+
+        userMenuBtn.addEventListener('click', () => {
+            userDropdown.classList.toggle('hidden');
+        });
+
+        // 通知下拉菜单
+        const notificationBtn = document.getElementById('notificationBtn');
+        const notificationDropdown = document.getElementById('notificationDropdown');
+
+        notificationBtn.addEventListener('click', () => {
+            notificationDropdown.classList.toggle('hidden');
+        });
+
+        // 点击页面其他区域关闭下拉菜单
+        document.addEventListener('click', (e) => {
+            if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.add('hidden');
+            }
+
+            if (!notificationBtn.contains(e.target) && !notificationDropdown.contains(e.target)) {
+                notificationDropdown.classList.add('hidden');
+            }
+        });
+
+        // 初始化图表
+        function initCharts() {
+            // 内容增长趋势图表
+            const contentGrowthCtx = document.getElementById('contentGrowthChart').getContext('2d');
+            const contentGrowthChart = new Chart(contentGrowthCtx, {
+                type: 'line',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                    datasets: [
+                        {
+                            label: '学习笔记',
+                            data: [12, 19, 15, 22, 25, 30],
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: '待办事项',
+                            data: [8, 12, 10, 15, 18, 20],
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // 用户活动分布图
+            const userActivityCtx = document.getElementById('userActivityChart').getContext('2d');
+            const userActivityChart = new Chart(userActivityCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['学习笔记', '待办事项', '技能进度', '其他'],
+                    datasets: [
+                        {
+                            data: [45, 30, 15, 10],
+                            backgroundColor: [
+                                '#3B82F6',
+                                '#10B981',
+                                '#8B5CF6',
+                                '#94A3B8'
+                            ],
+                            borderWidth: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        // 加载最近修订记录
+        function loadRecentRevisions() {
+            // 模拟API请求
+            setTimeout(() => {
+                const tableBody = document.getElementById('recentRevisionsTableBody');
+                tableBody.innerHTML = '';
+
+                const revisions = [
+                    {
+                        id: '60a1b2c3d4e5f6g7h8i9j0k1',
+                        documentType: 'StudyNote',
+                        changeType: 'update',
+                        author: '张三',
+                        authorAvatar: 'https://picsum.photos/id/1001/40/40',
+                        createdAt: '2023-06-15 14:30:22',
+                        status: 'approved'
+                    },
+                    {
+                        id: '60a1b2c3d4e5f6g7h8i9j0k2',
+                        documentType: 'Todo',
+                        changeType: 'delete',
+                        author: '李四',
+                        authorAvatar: 'https://picsum.photos/id/1002/40/40',
+                        createdAt: '2023-06-15 13:15:45',
+                        status: 'pending'
+                    },
+                    {
+                        id: '60a1b2c3d4e5f6g7h8i9j0k3',
+                        documentType: 'StudyNote',
+                        changeType: 'create',
+                        author: '王五',
+                        authorAvatar: 'https://picsum.photos/id/1003/40/40',
+                        createdAt: '2023-06-15 11:20:10',
+                        status: 'approved'
+                    }
+                ];
+
+                revisions.forEach(revision => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50';
+
+                    // 状态样式
+                    let statusClass = 'px-2 py-1 text-xs rounded-full';
+                    let statusText = '';
+
+                    if (revision.status === 'approved') {
+                        statusClass += ' bg-green-100 text-green-800';
+                        statusText = '已批准';
+                    } else if (revision.status === 'pending') {
+                        statusClass += ' bg-yellow-100 text-yellow-800';
+                        statusText = '待审批';
+                    } else if (revision.status === 'rejected') {
+                        statusClass += ' bg-red-100 text-red-800';
+                        statusText = '已拒绝';
+                    }
+
+                    // 操作类型文本
+                    let changeTypeText = '';
+                    if (revision.changeType === 'create') {
+                        changeTypeText = '创建';
+                    } else if (revision.changeType === 'update') {
+                        changeTypeText = '更新';
+                    } else if (revision.changeType === 'delete') {
+                        changeTypeText = '删除';
+                    }
+
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${revision.id.substring(0, 8)}...</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${revision.documentType}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${changeTypeText}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div class="flex items-center">
+                                <img class="h-8 w-8 rounded-full mr-2" src="${revision.authorAvatar}" alt="${revision.author}">
+                                ${revision.author}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${revision.createdAt}</td>
+                        <td class="px-6 py-4 whitespace-nowrap"><span class="${statusClass}">${statusText}</span></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <a href="#" class="text-primary hover:text-primary/80 mr-3">查看</a>
+                            ${revision.status === 'pending' ? '<a href="#" class="text-green-600 hover:text-green-800 mr-3">批准</a><a href="#" class="text-red-600 hover:text-red-800">拒绝</a>' : ''}
+                        </td>
+                    `;
+
+                    tableBody.appendChild(row);
+                });
+            }, 1000);
+        }
+
+        // 加载待审批项
+        function loadPendingApprovals() {
+            // 模拟API请求
+            setTimeout(() => {
+                const tableBody = document.getElementById('pendingApprovalsTableBody');
+                tableBody.innerHTML = '';
+
+                const approvals = [
+                    {
+                        id: '60a1b2c3d4e5f6g7h8i9j0k2',
+                        documentType: 'Todo',
+                        changeType: 'delete',
+                        author: '李四',
+                        authorAvatar: 'https://picsum.photos/id/1002/40/40',
+                        createdAt: '2023-06-15 13:15:45'
+                    },
+                    {
+                        id: '60a1b2c3d4e5f6g7h8i9j0k4',
+                        documentType: 'User',
+                        changeType: 'update',
+                        author: '管理员',
+                        authorAvatar: 'https://picsum.photos/id/1005/40/40',
+                        createdAt: '2023-06-15 10:05:30'
+                    }
+                ];
+
+                approvals.forEach(approval => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50';
+
+                    // 操作类型文本
+                    let changeTypeText = '';
+                    if (approval.changeType === 'create') {
+                        changeTypeText = '创建';
+                    } else if (approval.changeType === 'update') {
+                        changeTypeText = '更新';
+                    } else if (approval.changeType === 'delete') {
+                        changeTypeText = '删除';
+                    }
+
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${approval.id.substring(0, 8)}...</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${approval.documentType}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${changeTypeText}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div class="flex items-center">
+                                <img class="h-8 w-8 rounded-full mr-2" src="${approval.authorAvatar}" alt="${approval.author}">
+                                ${approval.author}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${approval.createdAt}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <a href="#" class="text-green-600 hover:text-green-800 mr-3">批准</a>
+                            <a href="#" class="text-red-600 hover:text-red-800">拒绝</a>
+                        </td>
+                    `;
+
+                    tableBody.appendChild(row);
+                });
+
+                // 更新待审批数量
+                document.getElementById('pendingApprovals').textContent = approvals.length;
+            }, 1200);
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            loadRecentRevisions();
+            loadPendingApprovals();
+
+            // 模拟加载用户数据
+            setTimeout(() => {
+                document.getElementById('totalUsers').textContent = '24';
+                document.getElementById('totalNotes').textContent = '156';
+                document.getElementById('totalTodos').textContent = '89';
+            }, 800);
+        });
+    </script>
+</body>
+</html>

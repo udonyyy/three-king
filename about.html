@@ -2,124 +2,376 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>Three KING</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>关于我们 - Three KING</title>
   <link rel="icon" href="atm.jpg" type="image/png/jpg">
-
-  <!-- ✅ 图标库 Font Awesome 引入 -->
+  <!-- 图标库 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
+  
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
+    /* 全局样式 */
+    * {
       margin: 0;
-      padding: 40px;
-      text-align: center;
+      padding: 0;
+      box-sizing: border-box;
     }
-
-    h1 {
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
       color: #333;
+      line-height: 1.6;
     }
 
-    nav {
-      margin-bottom: 30px;
-    }
-
-    nav a {
-      text-decoration: none;
-      background-color: #007BFF;
-      color: white;
-      padding: 10px 18px;
-      margin: 0 10px;
-      border-radius: 6px;
-      font-size: 14px;
-      display: inline-block;
-      transition: background-color 0.3s;
-    }
-
-    nav a:hover {
-      background-color: #0056b3;
-    }
-
-    .card {
+    /* 导航栏 */
+    .navbar {
       background-color: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      padding: 20px;
-      margin: 20px auto;
-      width: 300px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      padding: 15px 5%;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-
-    .card img {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-bottom: 10px;
-    }
-
-    .links a {
-      display: inline-block;
-      background-color: #4CAF50;
-      color: white;
-      padding: 8px 12px;
-      margin: 5px;
-      border-radius: 6px;
+    .nav-brand {
+      color: #007BFF;
       text-decoration: none;
-      font-size: 14px;
-      transition: background-color 0.3s;
+      font-size: 22px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-brand i {
+      font-size: 24px;
     }
 
-    .links a:hover {
-      background-color: #45a049;
+    /* 页面标题 */
+    .page-title {
+      text-align: center;
+      margin: 40px 0 60px;
+      font-size: 32px;
+      color: #2c3e50;
+      position: relative;
     }
+    .page-title::after {
+      content: "";
+      display: block;
+      width: 80px;
+      height: 4px;
+      background-color: #007BFF;
+      margin: 15px auto 0;
+      border-radius: 2px;
+    }
+
+    /* 成员卡片容器 */
+    .members-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+    @media (min-width: 768px) {
+      .members-container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (min-width: 1024px) {
+      .members-container {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    /* 成员卡片样式 */
+    .member-card {
+      background-color: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      padding: 30px;
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .member-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+    }
+
+    /* 头像容器与交互 */
+    .avatar-container {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      margin: 0 auto 25px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 6px solid #f1f5f9;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .member-card:hover .avatar-container {
+      transform: scale(1.1);
+    }
+    .avatar {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* 联系方式（默认隐藏，hover显示并放大） */
+    .contact-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.7));
+      color: white;
+      padding: 20px 15px 15px;
+      transform: translateY(100%) scale(0.9); /* 初始缩小 */
+      transition: transform 0.3s ease; /* 合并过渡效果 */
+    }
+    .member-card:hover .contact-info {
+      transform: translateY(0) scale(1.05); /* 滑入+放大 */
+    }
+    .contact-item {
+      margin: 8px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+    .contact-item a {
+      color: white;
+      text-decoration: none; /* 始终无下划线 */
+      transition: color 0.2s;
+    }
+    .contact-item a:hover {
+      color: #e3f2fd;
+      /* 移除下划线效果 */
+    }
+
+    /* 成员信息 */
+    .member-name {
+      font-size: 22px;
+      margin-bottom: 10px;
+      color: #2c3e50;
+    }
+    .member-title {
+      font-size: 16px;
+      color: #7f8c8d;
+      margin-bottom: 15px;
+      font-style: italic;
+    }
+    .member-motto {
+      font-size: 15px;
+      color: #34495e;
+      padding: 0 10px;
+      line-height: 1.7;
+    }
+
+    /* 微信二维码模态框 */
+    .qr-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .qr-modal.show {
+      display: flex;
+      opacity: 1;
+    }
+    .qr-content {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      text-align: center;
+      transform: scale(0.9);
+      transition: transform 0.3s;
+    }
+    .qr-modal.show .qr-content {
+      transform: scale(1);
+    }
+    .close-qr {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 24px;
+      color: #999;
+      cursor: pointer;
+      background: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .close-qr:hover {
+      color: #e74c3c;
+      transform: rotate(90deg);
+    }
+    .qr-img {
+      width: 220px;
+      height: 220px;
+      object-fit: contain;
+      margin-bottom: 15px;
+      border-radius: 8px;
+    }
+    .qr-desc {
+      color: #34495e;
+      font-size: 16px;
+    }
+
+    /* 页脚 */
+    footer {
+      text-align: center;
+      margin: 80px 0 30px;
+      color: #95a5a6;
+      font-size: 14px;
+      padding-top: 20px;
+      border-top: 1px solid #ecf0f1;
+    }
+
   </style>
 </head>
 <body>
-  <h1>Our Group</h1>
-
-  <!-- ✅ 导航栏加图标 -->
-  <nav>
-    <a href="index.html"><i class="fas fa-home"></i> 返回主页</a>
-    <a href="life.html"><i class="fas fa-book"></i> 生活记录</a>
-    <a href="contact.html"><i class="fas fa-envelope"></i> 联系方式</a>
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <a href="index.html" class="nav-brand">
+      <i class="fas fa-crown"></i>
+      Three King
+    </a>
   </nav>
 
-  <!-- 小明 -->
-  <div class="card">
-    <img src="yzy.jpg" alt="小明头像">
-    <h2>熬夜大王</h2>
-    <p>PEACE</p>
-    <div class="links">
-      <a href="https://github.com/yzy" target="_blank">GitHub</a>
-      <a href="https://space.bilibili.com/76653297?spm_id_from=333.1007.0.0" target="_blank">Bilibili</a>
-      <a href="aaa.jpg" download>resume简历</a>
+  <!-- 页面标题 -->
+  <h1 class="page-title">Who are we?</h1>
+
+  <!-- 成员卡片容器 -->
+  <div class="members-container">
+    <!-- 熬夜大王 -->
+    <div class="member-card">
+      <div class="avatar-container">
+        <img src="yzy.jpg" alt="熬夜大王头像" class="avatar">
+      </div>
+      <h2 class="member-name">King of Staying Up Late</h2>
+      <p class="member-title">熬夜大王</p>
+      <p class="member-motto">PEACE</p>
+      
+      <!-- 悬停显示的联系方式（会放大） -->
+      <div class="contact-info">
+        <div class="contact-item">
+          <i class="fab fa-weixin"></i>
+          <span onclick="openWechatQr('vx.jpg')">微信：点击查看二维码</span>
+        </div>
+        <div class="contact-item">
+          <i class="fab fa-bilibili"></i>
+          <a href="https://space.bilibili.com/76653297?spm_id_from=333.1007.0.0" target="_blank">B站主页</a>
+        </div>
+        <div class="contact-item">
+          <i class="fas fa-file-pdf"></i>
+          <a href="aaa.jpg" download>下载简历</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 睡觉大王 -->
+    <div class="member-card">
+      <div class="avatar-container">
+        <img src="lyf.jpg" alt="睡觉大王头像" class="avatar">
+      </div>
+      <h2 class="member-name">Sleep King</h2>
+      <p class="member-title">睡觉大王</p>
+      <p class="member-motto">To shine, not be illuminated.</p>
+      
+      <!-- 悬停显示的联系方式（会放大） -->
+      <div class="contact-info">
+        <div class="contact-item">
+          <i class="fab fa-weixin"></i>
+          <span onclick="openWechatQr('wx-lyf.jpg')">微信：点击查看二维码</span>
+        </div>
+        <div class="contact-item">
+          <i class="fab fa-bilibili"></i>
+          <a href="https://space.bilibili.com/3546856539818659?spm_id_from=333.1007.0.0" target="_blank">B站主页</a>
+        </div>
+        <div class="contact-item">
+          <i class="fas fa-file-pdf"></i>
+          <a href="atm.jpg" download>下载简历</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 游戏大王 -->
+    <div class="member-card">
+      <div class="avatar-container">
+        <img src="yy.jpg" alt="游戏大王头像" class="avatar">
+      </div>
+      <h2 class="member-name">Game King</h2>
+      <p class="member-title">游戏大王</p>
+      <p class="member-motto">Sing and dance to your heart's content!</p>
+      
+      <!-- 悬停显示的联系方式（会放大） -->
+      <div class="contact-info">
+        <div class="contact-item">
+          <i class="fab fa-weixin"></i>
+          <span onclick="openWechatQr('wx-yy.jpg')">微信：点击查看二维码</span>
+        </div>
+        <div class="contact-item">
+          <i class="fab fa-bilibili"></i>
+          <a href="https://space.bilibili.com/3546736884713814?spm_id_from=333.1007.0.0" target="_blank">B站主页</a>
+        </div>
+        <div class="contact-item">
+          <i class="fas fa-file-pdf"></i>
+          <a href="atzm.jpg" download>下载简历</a>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- 小红 -->
-  <div class="card">
-    <img src="lyf.jpg" alt="小红头像">
-    <h2>睡觉大王</h2>
-    <p>To shine , not be illuminated.</p>
-    <div class="links">
-      <a href="https://github.com/lyf" target="_blank">GitHub</a>
-      <a href="https://space.bilibili.com/3546856539818659?spm_id_from=333.1007.0.0" target="_blank">Bilibili</a>
-      <a href="atm.jpg" download>resume简历</a>
+  <!-- 微信二维码模态框 -->
+  <div class="qr-modal" id="wechatModal">
+    <div class="qr-content">
+      <span class="close-qr" onclick="closeWechatQr()">×</span>
+      <img src="" alt="微信二维码" class="qr-img" id="qrImage">
+      <p class="qr-desc">扫码添加好友O(∩_∩)O</p>
     </div>
   </div>
 
-  <!-- 小刚 -->
-  <div class="card">
-    <img src="yy.jpg" alt="小刚头像">
-    <h2>游戏大王</h2>
-    <p>Sing and dance to your heart's content!</p>
-    <div class="links">
-      <a href="https://github.com/yy" target="_blank">GitHub</a>
-      <a href="https://space.bilibili.com/3546736884713814?spm_id_from=333.1007.0.0" target="_blank">Bilibili</a>
-      <a href="atzm.jpg" download>resume简历</a>
-    </div>
-  </div>
+  <!-- 页脚 -->
+  <footer>
+    The story of Three King's URL begins on July 7, 2025 | 无限进步！(๑•̀ㅂ•́)و✧
+  </footer>
 
+  <script>
+    // 微信二维码模态框控制
+    const wechatModal = document.getElementById('wechatModal');
+    const qrImage = document.getElementById('qrImage');
+
+    function openWechatQr(imgSrc) {
+      qrImage.src = imgSrc;
+      wechatModal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeWechatQr() {
+      wechatModal.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    wechatModal.addEventListener('click', (e) => {
+      if (e.target === wechatModal) {
+        closeWechatQr();
+      }
+    });
+  </script>
 </body>
 </html>
